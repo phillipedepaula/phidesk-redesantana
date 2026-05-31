@@ -1,0 +1,26 @@
+{
+  "name": "PhiDesk — Controle de Demandas",
+  "short_name": "PhiDesk",
+  "description": "Painel de controle de demandas jurídicas — Phillipe de Paula Adv.",
+  "start_url": "/phidesk-redesantana/",
+  "scope": "/phidesk-redesantana/",
+  "display": "standalone",
+  "orientation": "landscape",
+  "background_color": "#EDEEF2",
+  "theme_color": "#1B2B4B",
+  "lang": "pt-BR",
+  "icons": [
+    {
+      "src": "icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
