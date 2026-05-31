@@ -1,0 +1,987 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PhiDesk — Controle de Demandas</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=IBM+Plex+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#EDEEF2;--bg2:#E4E6EC;--surface:#FFFFFF;--surface2:#F5F6F9;
+  --border:#D5D8E0;--border2:#C8CBD6;
+  --navy:#1B2B4B;--navy2:#243660;--navy3:#2E4480;
+  --text:#1B2B4B;--text-dim:#5A6480;--text-muted:#9299AF;
+  --accent:#2E4480;--accent-hover:#243660;
+  --green:#1A7A4A;--green-bg:#E8F5EE;--green-border:#B8DFC9;
+  --red:#C0392B;--red-bg:#FDECEA;--red-border:#F5BDB8;
+  --amber:#A0620A;--amber-bg:#FEF6E4;--amber-border:#F0D898;
+  --orange:#B84A00;--orange-bg:#FEF0E6;--orange-border:#F0C8A0;
+  --blue-bg:#EBF0FB;--blue-border:#B8C8F0;
+  --purple:#5B3FA0;--purple-bg:#F0EBFB;
+  --sidebar:252px;--header:58px;
+  --radius:10px;
+  --shadow:0 1px 3px rgba(27,43,75,.08),0 4px 12px rgba(27,43,75,.05);
+  --shadow-lg:0 4px 16px rgba(27,43,75,.12),0 8px 32px rgba(27,43,75,.08);
+}
+html,body{height:100%;font-family:'IBM Plex Sans',sans-serif;background:var(--bg);color:var(--text);font-size:14px;line-height:1.5;overflow:hidden}
+a{color:var(--accent);text-decoration:none}
+button{font-family:inherit;cursor:pointer}
+.layout{display:flex;height:100vh}
+.sidebar{width:var(--sidebar);flex-shrink:0;background:var(--navy);display:flex;flex-direction:column;overflow:hidden}
+.main{flex:1;display:flex;flex-direction:column;overflow:hidden;background:var(--bg)}
+.sidebar-logo{padding:20px 18px 16px;border-bottom:1px solid rgba(255,255,255,.08)}
+.logo-mark{font-family:'Playfair Display',serif;font-size:20px;color:#fff;letter-spacing:-.3px}
+.logo-mark span{color:#7B9FE8}
+.logo-sub{font-size:10px;color:rgba(255,255,255,.35);letter-spacing:.8px;text-transform:uppercase;margin-top:3px;font-weight:500}
+.sidebar-section{padding:10px 0;flex:1;overflow-y:auto}
+.sidebar-section::-webkit-scrollbar{width:3px}
+.sidebar-section::-webkit-scrollbar-thumb{background:rgba(255,255,255,.1)}
+.sidebar-group-label{padding:10px 18px 5px;font-size:9.5px;letter-spacing:1px;text-transform:uppercase;color:rgba(255,255,255,.3);font-weight:600}
+.sidebar-group-pill{margin:14px 12px 4px;padding:7px 12px;border-radius:8px;display:flex;align-items:center;gap:8px;font-size:12px;font-weight:700;letter-spacing:.2px}
+.sidebar-group-pill.rs{background:rgba(123,159,232,.18);border:1px solid rgba(123,159,232,.3);color:#A8C4F0}
+.sidebar-group-pill.es{background:rgba(52,199,130,.14);border:1px solid rgba(52,199,130,.25);color:#6EDBA8}
+.sidebar-group-pill .pill-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
+.sidebar-group-pill.rs .pill-dot{background:#7B9FE8}
+.sidebar-group-pill.es .pill-dot{background:#3DC78A}
+.sidebar-item{display:flex;align-items:center;gap:10px;padding:9px 18px;cursor:pointer;border-left:2px solid transparent;transition:all .15s;color:rgba(255,255,255,.5);font-size:13px;font-weight:500}
+.sidebar-item:hover{background:rgba(255,255,255,.05);color:rgba(255,255,255,.85)}
+.sidebar-item.active{border-left-color:#7B9FE8;background:rgba(123,159,232,.1);color:#fff}
+.si-icon{font-size:14px;width:18px;text-align:center;flex-shrink:0}
+.si-label{flex:1}
+.si-count{font-size:10px;font-weight:700;background:rgba(255,255,255,.12);color:rgba(255,255,255,.7);border-radius:8px;padding:1px 6px;min-width:18px;text-align:center}
+.si-count.urgent{background:var(--red);color:#fff}
+.si-count.ok{background:rgba(26,122,74,.6);color:#fff}
+.sidebar-footer{padding:14px 18px;border-top:1px solid rgba(255,255,255,.08);font-size:11px;color:rgba(255,255,255,.3)}
+.sidebar-footer strong{color:rgba(255,255,255,.5);display:block;margin-bottom:2px}
+.main-header{height:var(--header);flex-shrink:0;background:var(--surface);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 24px;gap:12px;box-shadow:0 1px 0 var(--border)}
+.header-left h1{font-family:'Playfair Display',serif;font-size:17px;color:var(--navy);font-weight:600}
+.header-left .h-sub{font-size:11px;color:var(--text-muted);margin-top:1px}
+.header-actions{display:flex;gap:8px;align-items:center}
+.btn{display:inline-flex;align-items:center;gap:6px;padding:7px 14px;border-radius:7px;font-size:13px;font-weight:500;border:1px solid var(--border);background:var(--surface);color:var(--text);transition:all .15s;cursor:pointer}
+.btn:hover{background:var(--surface2);border-color:var(--border2)}
+.btn.primary{background:var(--navy);border-color:var(--navy);color:#fff}
+.btn.primary:hover{background:var(--navy2)}
+.btn.danger{background:var(--red-bg);border-color:var(--red-border);color:var(--red)}
+.btn.success{background:var(--green-bg);border-color:var(--green-border);color:var(--green)}
+.btn.sm{padding:5px 10px;font-size:12px}
+.btn.ghost{background:transparent;border-color:transparent;color:var(--text-dim)}
+.btn.ghost:hover{background:var(--surface2);border-color:var(--border)}
+.content{flex:1;overflow-y:auto;padding:20px 24px}
+.content::-webkit-scrollbar{width:6px}
+.content::-webkit-scrollbar-thumb{background:var(--border2);border-radius:3px}
+.stats-row{display:flex;gap:10px;margin-bottom:18px;flex-wrap:wrap}
+.stat-card{flex:1;min-width:110px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:14px 16px;box-shadow:var(--shadow)}
+.stat-card .sc-val{font-size:26px;font-weight:700;font-family:'Playfair Display',serif;line-height:1.1;color:var(--navy)}
+.stat-card .sc-label{font-size:10.5px;color:var(--text-muted);margin-top:5px;text-transform:uppercase;letter-spacing:.5px;font-weight:600}
+.stat-card.red{border-left:3px solid var(--red)}.stat-card.red .sc-val{color:var(--red)}
+.stat-card.amber{border-left:3px solid var(--amber)}.stat-card.amber .sc-val{color:var(--amber)}
+.stat-card.green{border-left:3px solid var(--green)}.stat-card.green .sc-val{color:var(--green)}
+.stat-card.blue{border-left:3px solid var(--accent)}.stat-card.blue .sc-val{color:var(--accent)}
+.toolbar{display:flex;gap:8px;align-items:center;margin-bottom:14px;flex-wrap:wrap}
+.search-wrap{flex:1;min-width:200px;position:relative}
+.search-wrap input{width:100%;padding:8px 12px 8px 34px;background:var(--surface);border:1px solid var(--border);border-radius:7px;color:var(--text);font-size:13px;font-family:inherit;transition:border-color .15s;box-shadow:var(--shadow)}
+.search-wrap input:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px rgba(46,68,128,.1)}
+.search-wrap input::placeholder{color:var(--text-muted)}
+.search-icon{position:absolute;left:10px;top:50%;transform:translateY(-50%);color:var(--text-muted);font-size:13px;pointer-events:none}
+.filter-select{padding:7px 10px;background:var(--surface);border:1px solid var(--border);border-radius:7px;color:var(--text);font-size:13px;font-family:inherit;box-shadow:var(--shadow);cursor:pointer}
+.filter-select:focus{outline:none;border-color:var(--accent)}
+.table-wrap{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;box-shadow:var(--shadow)}
+.table-wrap table{width:100%;border-collapse:collapse}
+.table-wrap th{background:var(--surface2);padding:10px 14px;text-align:left;font-size:10.5px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;color:var(--text-muted);border-bottom:1px solid var(--border);white-space:nowrap}
+.table-wrap td{padding:11px 14px;border-bottom:1px solid var(--border);font-size:13px;vertical-align:middle}
+.table-wrap tr:last-child td{border-bottom:none}
+.table-wrap tr.clickable{cursor:pointer;transition:background .1s}
+.table-wrap tr.clickable:hover td{background:var(--bg2)}
+.table-wrap tr.row-vencido td:first-child{border-left:3px solid var(--red)}
+.table-wrap tr.row-urgente td:first-child{border-left:3px solid var(--amber)}
+.badge{display:inline-flex;align-items:center;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:600;white-space:nowrap;border:1px solid transparent}
+.badge.red{background:var(--red-bg);color:var(--red);border-color:var(--red-border)}
+.badge.green{background:var(--green-bg);color:var(--green);border-color:var(--green-border)}
+.badge.amber{background:var(--amber-bg);color:var(--amber);border-color:var(--amber-border)}
+.badge.blue{background:var(--blue-bg);color:var(--accent);border-color:var(--blue-border)}
+.badge.orange{background:var(--orange-bg);color:var(--orange);border-color:var(--orange-border)}
+.badge.purple{background:var(--purple-bg);color:var(--purple);border-color:#D5C8F0}
+.badge.muted{background:var(--surface2);color:var(--text-muted);border-color:var(--border)}
+.deadline-chip{display:inline-flex;align-items:center;gap:4px;padding:3px 9px;border-radius:5px;font-size:11.5px;font-weight:600;border:1px solid transparent;white-space:nowrap}
+.deadline-chip.vencido{background:var(--red-bg);color:var(--red);border-color:var(--red-border)}
+.deadline-chip.hoje{background:var(--orange-bg);color:var(--orange);border-color:var(--orange-border)}
+.deadline-chip.amanha{background:var(--amber-bg);color:var(--amber);border-color:var(--amber-border)}
+.deadline-chip.breve{background:var(--blue-bg);color:var(--accent);border-color:var(--blue-border)}
+.deadline-chip.ok{background:var(--green-bg);color:var(--green);border-color:var(--green-border)}
+.deadline-chip.sem-prazo{background:var(--surface2);color:var(--text-muted);border-color:var(--border);font-weight:400}
+.agenda-section{margin-bottom:22px}
+.agenda-section-header{display:flex;align-items:center;gap:10px;padding:0 0 10px;margin-bottom:12px;border-bottom:2px solid var(--border)}
+.agenda-section-header h3{font-size:13px;font-weight:700}
+.agenda-count{font-size:11px;font-weight:700;padding:2px 8px;border-radius:10px}
+.agenda-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:14px 16px;margin-bottom:8px;cursor:pointer;transition:all .15s;border-left:4px solid transparent;box-shadow:var(--shadow)}
+.agenda-card:hover{box-shadow:var(--shadow-lg);transform:translateY(-1px)}
+.agenda-card.vencido{border-left-color:var(--red)}
+.agenda-card.hoje{border-left-color:var(--orange)}
+.agenda-card.amanha{border-left-color:var(--amber)}
+.agenda-card.breve{border-left-color:var(--accent)}
+.ac-top{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;margin-bottom:6px}
+.ac-ticket{font-size:10.5px;font-weight:700;color:var(--text-muted);letter-spacing:.6px;margin-bottom:2px}
+.ac-cliente{font-size:14px;font-weight:600;color:var(--navy)}
+.ac-desc{font-size:12px;color:var(--text-dim);line-height:1.55;margin-top:5px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.ac-meta{display:flex;gap:6px;align-items:center;margin-top:10px;flex-wrap:wrap}
+.dash-section{margin-bottom:24px}
+.dash-section h3{font-family:'Playfair Display',serif;font-size:15px;color:var(--navy);margin-bottom:14px;padding-bottom:8px;border-bottom:1px solid var(--border)}
+.team-cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:12px}
+.team-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px;box-shadow:var(--shadow)}
+.team-card .tc-name{font-size:14px;font-weight:700;color:var(--navy);margin-bottom:12px;display:flex;align-items:center;gap:8px}
+.tc-avatar{width:28px;height:28px;border-radius:50%;background:var(--navy);color:#fff;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.tc-row{display:flex;justify-content:space-between;align-items:center;padding:4px 0;font-size:12px}
+.tc-row span:first-child{color:var(--text-dim)}
+.tc-row strong{color:var(--navy);font-weight:700}
+.tc-divider{height:1px;background:var(--border);margin:8px 0}
+.overview-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px}
+.overview-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px;box-shadow:var(--shadow)}
+.overview-card h4{font-size:11px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--text-muted);margin-bottom:12px}
+.cat-row{display:flex;align-items:center;gap:10px;padding:5px 0;font-size:12px}
+.cat-bar-wrap{flex:1;height:6px;background:var(--bg2);border-radius:3px;overflow:hidden}
+.cat-bar{height:100%;background:var(--navy);border-radius:3px}
+.cat-count{font-size:11px;font-weight:700;color:var(--text-dim);min-width:24px;text-align:right}
+.cat-label{width:140px;flex-shrink:0;color:var(--text-dim)}
+.modal-overlay{position:fixed;inset:0;background:rgba(27,43,75,.35);z-index:100;display:flex;align-items:center;justify-content:center;padding:20px;backdrop-filter:blur(3px)}
+.modal{background:var(--surface);border:1px solid var(--border);border-radius:14px;width:100%;max-width:780px;max-height:90vh;display:flex;flex-direction:column;box-shadow:var(--shadow-lg)}
+.modal-header{padding:22px 26px 18px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:flex-start;gap:16px;background:var(--surface2);border-radius:14px 14px 0 0}
+.modal-header h2{font-family:'Playfair Display',serif;font-size:19px;color:var(--navy)}
+.modal-body{padding:22px 26px;overflow-y:auto;flex:1}
+.modal-body::-webkit-scrollbar{width:4px}
+.modal-body::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px}
+.modal-footer{padding:14px 26px;border-top:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;background:var(--surface2);border-radius:0 0 14px 14px}
+.modal-close{background:none;border:none;color:var(--text-muted);font-size:18px;cursor:pointer;padding:4px;line-height:1;border-radius:4px}
+.modal-close:hover{background:var(--bg2);color:var(--text)}
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.form-grid.c1{grid-template-columns:1fr}
+.form-grid.c3{grid-template-columns:1fr 1fr 1fr}
+.form-group{display:flex;flex-direction:column;gap:5px}
+.form-group.s2{grid-column:1/-1}
+.form-group label{font-size:10.5px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.5px}
+.form-group input,.form-group select,.form-group textarea{padding:8px 10px;background:var(--surface);border:1px solid var(--border);border-radius:7px;color:var(--text);font-size:13px;font-family:inherit;transition:border-color .15s}
+.form-group input:focus,.form-group select:focus,.form-group textarea:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px rgba(46,68,128,.08)}
+.form-group textarea{resize:vertical;min-height:80px}
+.form-section{margin-bottom:20px}
+.form-section h4{font-size:11px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;color:var(--navy);padding-bottom:8px;border-bottom:1px solid var(--border);margin-bottom:12px}
+.detail-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px}
+.detail-item label{font-size:10px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:4px}
+.detail-item .dv{font-size:13px;color:var(--text);word-break:break-word}
+.detail-item.s2{grid-column:1/-1}
+.detail-desc{background:var(--surface2);border:1px solid var(--border);border-radius:7px;padding:12px;font-size:13px;line-height:1.6;color:var(--text-dim);margin-top:4px}
+.detail-desc.obs{background:var(--amber-bg);border-color:var(--amber-border)}
+.empty-state{text-align:center;padding:60px 20px;color:var(--text-muted)}
+.empty-state .es-icon{font-size:36px;margin-bottom:12px}
+.pagination{display:flex;align-items:center;justify-content:space-between;padding-top:14px;font-size:12px;color:var(--text-muted)}
+.page-btns{display:flex;gap:4px}
+.page-btn{padding:5px 10px;border-radius:6px;border:1px solid var(--border);background:var(--surface);color:var(--text-dim);cursor:pointer;font-size:12px;transition:all .15s}
+.page-btn:hover{color:var(--navy);border-color:var(--navy)}
+.page-btn.active{background:var(--navy);border-color:var(--navy);color:#fff}
+.page-btn:disabled{opacity:.4;cursor:default}
+.toast{position:fixed;bottom:20px;right:20px;z-index:300;background:var(--navy);color:#fff;border-radius:8px;padding:12px 18px;font-size:13px;font-weight:500;box-shadow:var(--shadow-lg);transform:translateY(16px);opacity:0;transition:all .25s;max-width:320px}
+.toast.show{transform:none;opacity:1}
+.toast.success{background:var(--green)}
+.toast.error{background:var(--red)}
+.hidden{display:none!important}
+.clip{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:190px}
+.nowrap{white-space:nowrap}
+.flex-c{display:flex;align-items:center;gap:6px}
+
+.drawer-overlay{position:fixed;inset:0;background:rgba(27,43,75,.25);z-index:200;backdrop-filter:blur(2px);animation:fadeIn .15s ease}
+.drawer{position:fixed;top:0;right:0;width:480px;max-width:95vw;height:100vh;background:var(--surface);border-left:1px solid var(--border);box-shadow:-4px 0 24px rgba(27,43,75,.12);display:flex;flex-direction:column;z-index:201;animation:slideIn .2s ease}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+@keyframes slideIn{from{transform:translateX(40px);opacity:0}to{transform:none;opacity:1}}
+.drawer-header{padding:18px 20px 14px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;gap:12px;background:var(--surface2);flex-shrink:0}
+.drawer-header .dh-left{display:flex;align-items:center;gap:10px}
+.drawer-header h3{font-family:'Playfair Display',serif;font-size:16px;color:var(--navy)}
+.drawer-header .dh-sub{font-size:11px;color:var(--text-muted);margin-top:2px}
+.drawer-close{background:none;border:none;color:var(--text-muted);font-size:18px;cursor:pointer;padding:4px 6px;border-radius:5px;line-height:1}
+.drawer-close:hover{background:var(--bg2);color:var(--text)}
+.drawer-body{flex:1;overflow-y:auto;padding:14px 16px}
+.drawer-body::-webkit-scrollbar{width:4px}
+.drawer-body::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px}
+.drawer-ticket{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:12px 14px;margin-bottom:8px;cursor:pointer;transition:all .15s;border-left:3px solid transparent}
+.drawer-ticket:hover{background:var(--bg2);box-shadow:0 2px 8px rgba(27,43,75,.08);transform:translateY(-1px)}
+.drawer-ticket.vencido{border-left-color:var(--red)}
+.drawer-ticket.hoje{border-left-color:var(--orange)}
+.drawer-ticket.amanha{border-left-color:var(--amber)}
+.drawer-ticket.breve{border-left-color:var(--accent)}
+.drawer-ticket.ok{border-left-color:var(--green)}
+.drawer-ticket.sem-prazo{border-left-color:var(--border2)}
+.dt-top{display:flex;justify-content:space-between;align-items:flex-start;gap:8px;margin-bottom:5px}
+.dt-ticket{font-size:10px;font-weight:700;letter-spacing:.5px;color:var(--text-muted)}
+.dt-cliente{font-size:13px;font-weight:600;color:var(--navy);line-height:1.3}
+.dt-desc{font-size:11.5px;color:var(--text-dim);line-height:1.5;margin-top:4px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.dt-meta{display:flex;gap:5px;align-items:center;margin-top:8px;flex-wrap:wrap}
+.drawer-empty{text-align:center;padding:40px 16px;color:var(--text-muted);font-size:13px}
+.team-card{cursor:pointer;transition:all .15s}
+.team-card:hover{box-shadow:0 4px 16px rgba(27,43,75,.12);transform:translateY(-2px);border-color:var(--navy)}
+
+.alert-cards{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:20px}
+.alert-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px 18px;cursor:pointer;transition:all .15s;display:flex;align-items:center;gap:14px;box-shadow:var(--shadow)}
+.alert-card:hover{box-shadow:var(--shadow-lg);transform:translateY(-2px)}
+.alert-card.hoje{border-left:4px solid var(--orange)}
+.alert-card.amanha{border-left:4px solid var(--amber)}
+.alert-card.terceiro{border-left:4px solid var(--accent)}
+.ac-icon{font-size:22px;flex-shrink:0}
+.ac-info{flex:1}
+.ac-title{font-size:13px;font-weight:700;color:var(--navy);margin-bottom:2px}
+.ac-count{font-size:24px;font-weight:700;font-family:'Playfair Display',serif;line-height:1}
+.ac-sub{font-size:11px;color:var(--text-muted);margin-top:3px}
+.ac-arrow{font-size:16px;color:var(--text-muted)}
+.alert-card:hover .ac-arrow{color:var(--navy)}
+
+.dt-status-row{margin-top:8px;display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.dt-status-select{padding:4px 8px;border-radius:6px;border:1px solid var(--border);background:var(--surface);color:var(--text);font-size:11px;font-family:inherit;cursor:pointer;flex:1;min-width:140px}
+.dt-status-select:focus{outline:none;border-color:var(--accent)}
+.dt-save-btn{padding:4px 10px;border-radius:6px;border:1px solid var(--green-border);background:var(--green-bg);color:var(--green);font-size:11px;font-weight:600;cursor:pointer;white-space:nowrap}
+.dt-save-btn:hover{background:var(--green);color:#fff}
+.drawer-section-label{font-size:10px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;color:var(--text-muted);padding:10px 0 6px;border-bottom:1px solid var(--border);margin-bottom:8px}
+</style>
+</head>
+<body>
+<div class="layout">
+<aside class="sidebar">
+  <div class="sidebar-logo">
+    <div class="logo-mark"><span>Phi</span>Desk</div>
+    <div class="logo-sub">Controle de Demandas</div>
+  </div>
+  <nav class="sidebar-section">
+    <div class="sidebar-group-label">Dashboard</div>
+    <div class="sidebar-item" data-key="dash" onclick="go('dash',this)">
+      <span class="si-icon">📊</span><span class="si-label">Visão Geral</span>
+    </div>
+    <div class="sidebar-group-pill rs"><span class="pill-dot"></span>Rede Santana</div>
+    <div class="sidebar-item active" data-key="rs-tickets" onclick="go('rs-tickets',this)">
+      <span class="si-icon">🗂</span><span class="si-label">Tickets</span>
+      <span class="si-count" id="b-rs-t">0</span>
+    </div>
+    <div class="sidebar-item" data-key="rs-agenda" onclick="go('rs-agenda',this)">
+      <span class="si-icon">⚡</span><span class="si-label">Demandas do Dia</span>
+      <span class="si-count urgent" id="b-rs-a">0</span>
+    </div>
+    <div class="sidebar-group-pill es"><span class="pill-dot"></span>Escritório</div>
+    <div class="sidebar-item" data-key="es-tickets" onclick="go('es-tickets',this)">
+      <span class="si-icon">📁</span><span class="si-label">Tickets</span>
+      <span class="si-count" id="b-es-t">0</span>
+    </div>
+    <div class="sidebar-item" data-key="es-agenda" onclick="go('es-agenda',this)">
+      <span class="si-icon">⚡</span><span class="si-label">Demandas do Dia</span>
+      <span class="si-count" id="b-es-a">0</span>
+    </div>
+  </nav>
+  <div class="sidebar-footer">
+    <strong id="today-str"></strong>Phillipe de Paula Adv.
+  </div>
+</aside>
+<main class="main">
+  <div class="main-header">
+    <div class="header-left">
+      <h1 id="view-title">Visão Geral</h1>
+      <div class="h-sub" id="view-sub"></div>
+    </div>
+    <div class="header-actions">
+      <button class="btn primary hidden" id="btn-new" onclick="openNew()">+ Novo Ticket</button>
+      <button class="btn ghost sm hidden" id="btn-csv" onclick="exportCSV()">⬇ CSV</button>
+    </div>
+  </div>
+  <div class="content" id="content"></div>
+</main>
+</div>
+<div class="modal-overlay hidden" id="overlay" onclick="closeBg(event)">
+  <div class="modal">
+    <div class="modal-header" id="mh"></div>
+    <div class="modal-body" id="mb"></div>
+    <div class="modal-footer" id="mf"></div>
+  </div>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+const RAW = {"redeSantana": [{"ticket": "RS/26-0001", "dataEntrada": "2026-05-04", "cliente": "Auto Posto Mate Amargo Ltda", "cnpj": "29.178.001/0001-02", "tipoDemanda": "ANP", "origem": "Riclei Gerente", "emailEnviado": "riclei@redesantana.com.br", "tituloEmail": "Fwd: ANP - Envio de DF nº 6330002633706309", "descricao": "Notificada a apresentar documentos fiscais (NF-e/NFC-e) referentes às vendas de combustíveis em período específico, no prazo de até 10 dias", "categoria": "Cível Administrativo", "processo": "Documento de Fiscalização n 633 000 26 33 706309", "respInterno": "Samuel", "respExterno": "Lívia (Ambiental)", "prazo": "2026-05-15", "diasRestantes": "-16.0", "status": "Aberto", "dataEncerramento": "", "linkDrive": "https://drive.google.com/drive/folders/1xvQdv0HyAku_VLINTxKP3faNK67VWa2U?usp=sharing", "email2": "", "email3": "", "obs": "Cliente alega cobrança acima da média"}, {"ticket": "RS/26-0002", "dataEntrada": "2026-04-14", "cliente": "Posto Três Barras Ltda", "cnpj": "02.973.900/0001-40", "tipoDemanda": "ANP", "origem": "Fernanda Santana", "emailEnviado": "tresbarras@redesantana.com.br", "tituloEmail": "NOTIFICAÇÃO ANP – TRÊS BARRAS", "descricao": "ANP notificou o posto para envio, em formato XML, das três últimas NF-e de aquisição de combustíveis anteriores à fiscalização e de todas as NF-e/NFC-e de vendas de combustíveis entre 15/01/2026 e 27/02/2026, incluindo eventos de cancelamento, devendo os arquivos ser enviados compactados em ZIP para a ANP.", "categoria": "Cível Administrativo", "processo": "Documento de Fiscalização nº 179 000 26 32 702226", "respInterno": "Samuel", "respExterno": "Lívia (Ambiental)", "prazo": "2026-05-07", "diasRestantes": "-24.0", "status": "Encerrado", "dataEncerramento": "", "linkDrive": "https://drive.google.com/drive/folders/1r5o7ZlLu7JQ3BzqBusLQHMjrpbQT_NuY?usp=sharing", "email2": "", "email3": "", "obs": ""}, {"ticket": "RS/26-0003", "dataEntrada": "2026-05-05", "cliente": "POSTO GAS STATION LTDA", "cnpj": "66.397.852/0001-72", "tipoDemanda": "Processo Judicial", "origem": "Posto Santana 3", "emailEnviado": "posto.santana3@gmail.com", "tituloEmail": "Fwd: Notificação domicilio eletrônico", "descricao": "Recebimento de notificação judicial eletrônica informando a existência de ação trabalhista em face da empresa. Foi designada audiência UNA por videoconferência para o dia 21/05/2026 às 09h. A empresa deve apresentar defesa e documentos no PJe antes da audiência.", "categoria": "Trabalhista Judicial", "processo": "0010650-88.2026.5.03.0163", "respInterno": "Samuel", "respExterno": "Jordânia", "prazo": "2026-05-15", "diasRestantes": "-16.0", "status": "Aguardando documento", "dataEncerramento": "", "linkDrive": "https://drive.google.com/drive/folders/1gaSFPwFS9advUbmU8nDq9__PlbLwhvqM?usp=sharing", "email2": "", "email3": "", "obs": ""}, {"ticket": "RS/26-0004", "dataEntrada": "2026-05-05", "cliente": "Auto Posto Navegantes Ltda", "cnpj": "", "tipoDemanda": "Processo Judicial", "origem": "Auto Posto Navegantes", "emailEnviado": "navegantes@redesantana.com.br", "tituloEmail": "NOTIFICAÇÃO", "descricao": "O Auto Posto Navegantes Ltda foi notificado como reclamado na ação trabalhista nº 0002265-04.2025.5.05.0561, movida por Reiane Carneiro de Carvalho perante a Vara do Trabalho de Porto Seguro/BA. A empresa deverá comparecer à audiência designada para o dia 23/09/2026 às 08h02.", "categoria": "Trabalhista Judicial", "processo": "0002265-04.2025.5.05.0561", "respInterno": "Samuel", "respExterno": "Jordânia", "prazo": "", "diasRestantes": "", "status": "", "dataEncerramento": "", "linkDrive": "https://drive.google.com/drive/folders/1WL-uscGZhoIVXdUn2MH3T0isOTBDAEn5?usp=sharing", "email2": "", "email3": "", "obs": ""}, {"ticket": "RS/26-0005", "dataEntrada": "2026-05-06", "cliente": "TASM Locação e Prestação de Serviços Ltda / Posto Canada Ltda", "cnpj": "51.773.341/0001-30", "tipoDemanda": "Processo Judicial", "origem": "Metodados Contábil Ltda", "emailEnviado": "posto.santana3@gmail.com", "tituloEmail": "Fwd: Fw: Notificação domicilio eletrônico", "descricao": "Intimação judicial recebida via Domicílio Judicial Eletrônico (CNJ) referente ao processo nº 0010804142026503003, ação trabalhista de rito sumaríssimo movida por Elizabeth Ribeiro Costa contra TASM Locação e Prestação de Serviços Ltda e Posto Canada Ltda.", "categoria": "Trabalhista Judicial", "processo": "0010804-14.2026.5.03.0032", "respInterno": "Samuel", "respExterno": "Jordânia", "prazo": "2026-05-13", "diasRestantes": "-18.0", "status": "Aberto", "dataEncerramento": "", "linkDrive": "https://drive.google.com/drive/folders/12DQIEBJVaddgJV49lOPsVoaF6ezNW-yS?usp=sharing", "email2": "", "email3": "", "obs": "Documentos para elaborar defesa foram enviados"}, {"ticket": "RS/26-0006", "dataEntrada": "2026-05-07", "cliente": "POSTO ESTRELA DO SUL LTDA", "cnpj": "19.651.123/0001-10", "tipoDemanda": "ANP", "origem": "Agência Nacional do Petróleo", "emailEnviado": "postoestrelasul@gmail.com", "tituloEmail": "Fwd: ANP - Envio de DF nº 9839832631695787", "descricao": "Fiscalização da ANP no posto revendedor resultou em notificação para envio de documentação (Certificado do Corpo de Bombeiros) no prazo de 15 dias. Também houve coleta de amostra de etanol para análise.", "categoria": "Cível Administrativo", "processo": "Protocolo: DF nº 9839832631695787", "respInterno": "Samuel", "respExterno": "Lívia (Ambiental)", "prazo": "2026-05-21", "diasRestantes": "-10.0", "status": "Em andamento", "dataEncerramento": "", "linkDrive": "https://drive.google.com/drive/folders/1ggYpSKQV2sZBBniu5lX_YJku-SEY5Tw1?usp=sharing", "email2": "", "email3": "", "obs": ""}, {"ticket": "RS/26-0007", "dataEntrada": "2026-05-07", "cliente": "EDER GERALDO DE MATOS MARQUES", "cnpj": "26.327.693/0001-15", "tipoDemanda": "Processo Judicial", "origem": "Phillipe Fonseca Paula", "emailEnviado": "advocaciadpaula@gmail.com", "tituloEmail": "PROCESSO JUDICIAL - reajuste de aluguel", "descricao": "Ação revisional de aluguel proposta em face da empresa, com pedido de reajuste locatício com base em valor de mercado. Foi determinada a adoção de providências para contratação de avaliador de imóvel.", "categoria": "Locação", "processo": "Protocolo: 5002456-79.2025.8.13.0499", "respInterno": "Samuel", "respExterno": "Jéssica", "prazo": "", "diasRestantes": "", "status": "Em andamento", "dataEncerramento": "", "linkDrive": "https://drive.google.com/drive/folders/1OHs7_GGYh3rrAW4U4vksyFJK7AubSAAb?usp=sharing", "email2": "", "email3": "", "obs": ""}, {"ticket": "RS/26-0008", "dataEntrada": "2026-05-07", "cliente": "REDE SANTANA COMBUSTÍVEIS SETE LAGOAS LTDA", "cnpj": "26.738.629/0001-27", "tipoDemanda": "PROCON", "origem": "PROCON Municipal de Sete Lagoas", "emailEnviado": "redesetelagoas1@gmail.com", "tituloEmail": "NOTIFICAÇÃO PROCON", "descricao": "O PROCON Municipal de Sete Lagoas notificou a empresa para apresentar documentos relativos ao custo de venda dos combustíveis (últimos 40 dias), movimentação física e contábil do estoque.", "categoria": "Cível Administrativo", "processo": "Protocolo: Ofício Requisitório nº 079/2026", "respInterno": "Samuel", "respExterno": "Jéssica", "prazo": "2026-05-11", "diasRestantes": "-20.0", "status": "Encerrado", "dataEncerramento": "", "linkDrive": "https://drive.google.com/drive/folders/1O79MhQ6afbAtrZ7b8KnT3svi2s0kpmKb?usp=sharing", "email2": "", "email3": "", "obs": ""}, {"ticket": "RS/26-0009", "dataEntrada": "2026-05-07", "cliente": "Posto Santana IV Ltda", "cnpj": "17.197.999/0001-03", "tipoDemanda": "Processo Judicial", "origem": "Gabrielle / Setor Cível", "emailEnviado": "civel@redesantana.com.br", "tituloEmail": "PRAZO PARA PAGAMENTO: 30/05/2026 - 2ª PARCELA DO ACORDO", "descricao": "Encaminhamento de boleto referente à 2ª parcela de acordo judicial firmado entre Posto Santana IV e Tokio Marine, no valor de R$ 2.286,33, com vencimento em 30/05/2026.", "categoria": "Cível Judicial", "processo": "5106219-42.2020.8.13.0024", "respInterno": "Samuel", "respExterno": "Jéssica", "prazo": "2026-05-30", "diasRestantes": "-1.0", "status": "Aguardando documento", "dataEncerramento": "", "linkDrive": "https://drive.google.com/drive/folders/1xSvKARowd-SCL0Ad2o-ubvA0jZsT5six?usp=sharing", "email2": "", "email3": "", "obs": "Aguardando pagamento da segunda parcela do acordo judicial."}, {"ticket": "RS/26-0010", "dataEntrada": "2026-05-07", "cliente": "Rede Santana de Combustíveis e GNV Sete Lagoas Ltda", "cnpj": "04.305.250/0001-90", "tipoDemanda": "PROCON", "origem": "Priscila (Posto Santana 3)", "emailEnviado": "posto.santana3@gmail.com", "tituloEmail": "PROCON", "descricao": "O posto encaminhou notificação do PROCON Municipal de Sete Lagoas exigindo documentos fiscais e contábeis relacionados à venda e estoque de combustíveis dos últimos 40 dias.", "categoria": "Cível Administrativo", "processo": "Protocolo: Ofício Requisitório nº 069/2026", "respInterno": "Samuel", "respExterno": "Jéssica", "prazo": "2026-05-11", "diasRestantes": "-20.0", "status": "Encerrado", "dataEncerramento": "", "linkDrive": "https://drive.google.com/drive/folders/1uji490B7ial-eaIJX57zJE5nYh7ystuF?usp=sharing", "email2": "", "email3": "", "obs": ""}, {"ticket": "RS/26-0011", "dataEntrada": "2026-05-08", "cliente": "AUTO POSTO MUCURI LTDA", "cnpj": "41.570.373/0001-85", "tipoDemanda": "Notificação Extrajudicial", "origem": "Prefeitura Municipal de Teófilo Otoni/MG", "emailEnviado": "mucuri@redesantana.com.br", "tituloEmail": "PREFEITURA DE TEOFILO OTONI - PRAZO DE 10 DIAS", "descricao": "Notificação da Prefeitura de Teófilo Otoni/MG solicitando apresentação dos arquivos da Escrituração Fiscal Digital – EFD ICMS/IPI (SPED Fiscal) referentes ao período de janeiro a dezembro de 2025.", "categoria": "Tributário", "processo": "", "respInterno": "Samuel", "respExterno": "Jordânia", "prazo": "2026-05-17", "diasRestantes": "-14.0", "status": "Em andamento", "dataEncerramento": "", "linkDrive": "https://drive.google.com/drive/folders/1Tb0olcU66XNoaECRFLvGujDnz8TagdR5?usp=sharing", "email2": "", "email3": "", "obs": "Email enviado para metodados, aguardando retorno"}, {"ticket": "RS/26-0012", "dataEntrada": "2026-05-08", "cliente": "Rede Sete Lagoas 2 Ltda", "cnpj": "28.453.650/0001-01", "tipoDemanda": "PROCON", "origem": "Pablo / Rede Sete Lagoas 2 Ltda", "emailEnviado": "redesetelagoas2@gmail.com", "tituloEmail": "Encaminhamento de notificação PROCON", "descricao": "Encaminhamento de notificação recebida do PROCON para análise jurídica e adoção das providências cabíveis pelo escritório.", "categoria": "Cível Administrativo", "processo": "OFÍCIO REQUISITÓRIO N° 064/2026", "respInterno": "Samuel", "respExterno": "Jéssica", "prazo": "2026-05-11", "diasRestantes": "-20.0", "status": "Encerrado", "dataEncerramento": "", "linkDrive": "https://drive.google.com/drive/folders/1KSuIYdSuZOrJJLYg97hNbbJDEijrEYdq?usp=sharing", "email2": "", "email3": "", "obs": ""}, {"ticket": "RS/26-0013", "dataEntrada": "2026-05-08", "cliente": "REDE SANTANA COMBUSTÍVEIS PIRAPORA II LTDA", "cnpj": "10.526.373/0001-54", "tipoDemanda": "ANP", "origem": "Metodados Contábil Ltda / Priscilla", "emailEnviado": "posto.santana3@gmail.com", "tituloEmail": "Citação de autuação Processo 48610.234643/2025-60", "descricao": "Recebida citação de autuação administrativa da ANP decorrente de fiscalização, com instauração de processo sancionador para apuração de irregularidades constantes em auto de infração.", "categoria": "Cível Administrativo", "processo": "Processo ANP nº 48610.234643/2025-60", "respInterno": "Samuel", "respExterno": "Lívia (Ambiental)", "prazo": "2026-05-22", "diasRestantes": "-9.0", "status": "Em andamento", "dataEncerramento": "", "linkDrive": "https://drive.google.com/drive/folders/1qIW2VTlodmN4EHiLORryii2svWAZsmw7?usp=sharing", "email2": "", "email3": "", "obs": ""}, {"ticket": "RS/26-0014", "dataEntrada": "2025-05-08", "cliente": "Rede Santana Combustíveis Pirapora II LTDA", "cnpj": "10.526.373/0001-54", "tipoDemanda": "ANP", "origem": "Cristiano Oliveira", "emailEnviado": "pirapora2@redesantana.com.br", "tituloEmail": "Fwd: Resposta a e-mail enviado - DF 695729", "descricao": "Demanda relacionada à interdição de combustíveis pela ANP, com necessidade de contratação de empresa especializada para coleta e descarte de 5.672 litros de produto fora das especificações.", "categoria": "Ambiental", "processo": "Processo ANP nº 48610.234643/2025-60 / DF nº 695729", "respInterno": "Samuel", "respExterno": "Lívia (Ambiental)", "prazo": "2026-05-20", "diasRestantes": "-9.0", "status": "Em andamento", "dataEncerramento": "", "linkDrive": "https://drive.google.com/drive/folders/1ObnTuf_r-_YyMCJJVqDmp_5Nrk1634wn?usp=sharing", "email2": "", "email3": "", "obs": ""}, {"ticket": "RS/26-0015", "dataEntrada": "2025-05-11", "cliente": "Comércio de Combustíveis Bom Jesus do Amparo Ltda", "cnpj": "29.501.530/0001-03", "tipoDemanda": "Ministério Público", "origem": "MPMG", "emailEnviado": "contato@campossilvaadv.com.br", "tituloEmail": "Ofício nº 229/2026", "descricao": "Apresentar alegações finais no prazo de 10 (dez) dias.", "categoria": "Cível Administrativo", "processo": "PROCON MPMG - Processo Administrativo - 52.16.0054.0036050/2023-17", "respInterno": "Jéssica", "respExterno": "Jéssica", "prazo": "2026-05-22", "diasRestantes": "-11.0", "status": "Em andamento", "dataEncerramento": "", "linkDrive": "https://drive.google.com/drive/folders/1ObnTuf_r-_YyMCJJVqDmp_5Nrk1634wn?usp=sharing", "email2": "", "email3": "", "obs": ""}, {"ticket": "RS/26-0016", "dataEntrada": "2026-05-11", "cliente": "CVO SERVICOS, LOCACAO E LOGISTICA LTDA", "cnpj": "45.333.779/0001-03", "tipoDemanda": "Processo Judicial", "origem": "Posto Santana 3", "emailEnviado": "posto.santana3@gmail.com", "tituloEmail": "Fwd: Fw: Notificação domicilio eletrônico", "descricao": "Notificação de domicílio eletrônico judicial recebida via CNJ para CVO SERVICOS, LOCACAO E LOGISTICA LTDA.", "categoria": "Cível Judicial", "processo": "", "respInterno": "Samuel", "respExterno": "Samuel", "prazo": "2026-05-12", "diasRestantes": "", "status": "Encerrado", "dataEncerramento": "", "linkDrive": "https://drive.google.com/drive/folders/1SBhexExyxeEV99ULlJ2Cz-LfQmzzo_JC", "email2": "", "email3": "", "obs": ""}, {"ticket": "RS/26-0017", "dataEntrada": "2026-05-11", "cliente": "REDE SANTANA COMBUSTIVEIS CASTELO BOM JESUS 2 LTDA", "cnpj": "31.251.776/0001-08", "tipoDemanda": "Processo Judicial", "origem": "Posto Santana 3", "emailEnviado": "posto.santana3@gmail.com", "tituloEmail": "Fwd: Notificação domicilio eletrônico", "descricao": "Notificação de comunicação processual via Domicílio Judicial Eletrônico. Necessário acessar o Portal do Domicílio Judicial Eletrônico para verificar o conteúdo.", "categoria": "Cível Judicial", "processo": "", "respInterno": "Samuel", "respExterno": "", "prazo": "2026-05-12", "diasRestantes": "", "status": "Encerrado", "dataEncerramento": "", "linkDrive": "https://drive.google.com/drive/folders/1HLLghh4DDdaGbYdqObTcHYCCqSBYFo8S", "email2": "", "email3": "", "obs": ""}, {"ticket": "RS/26-0018", "dataEntrada": "2026-05-11", "cliente": "MATOS E MARQUES TRANSPORTES E LOGISTICA LTDA", "cnpj": "28.384.976/0001-24", "tipoDemanda": "ANTT", "origem": "Willian/Renata", "emailEnviado": "transportadoraredesantana@gmail.com", "tituloEmail": "Fwd: Multa G003418361", "descricao": "PRF notifica auto de infração G003418361 por transporte de produto perigoso com condutor usando calçado inadequado. Veículo RUD9A16. Valor: R$ 600,00.", "categoria": "Cível Administrativo", "processo": "G003418361", "respInterno": "Samuel", "respExterno": "Willian", "prazo": "", "diasRestantes": "", "status": "Aberto", "dataEncerramento": "", "linkDrive": "https://drive.google.com/drive/folders/1o2RUKTWal-Bplkmulujh-bP2Yo-1YExg", "email2": "", "email3": "", "obs": ""}, {"ticket": "RS/26-0019", "dataEntrada": "2026-05-11", "cliente": "Novo Paraíso", "cnpj": "43.243.772/0001-67", "tipoDemanda": "Processo Judicial", "origem": "Novo Paraíso", "emailEnviado": "novoparaiso@redesantana.com.br", "tituloEmail": "NOTIFICAÇÃO MAEBE", "descricao": "Notificação referente a reclamação trabalhista. Aguardando análise dos documentos.", "categoria": "Trabalhista Judicial", "processo": "0000774-25.2026.5.05.0561", "respInterno": "Samuel", "respExterno": "Samuel", "prazo": "2026-10-13", "diasRestantes": "", "status": "Aberto", "dataEncerramento": "", "linkDrive": "https://drive.google.com/drive/folders/17xtbjDbwIYcw8wbkbuXFQrlw--faPqa6", "email2": "", "email3": "", "obs": ""}, {"ticket": "RS/26-0020", "dataEntrada": "2026-05-12", "cliente": "AUTO POSTO MATE AMARGO LTDA", "cnpj": "29.178.001/0001-02", "tipoDemanda": "Outros", "origem": "ENEL TRADING BRASIL S.A.", "emailEnviado": "riclei@redesantana.com.br", "tituloEmail": "Fwd: Elétron - Contratos", "descricao": "Contratação de fornecimento de energia elétrica no Mercado Livre junto à ENEL Trading Brasil S.A., vigência de abril/2026 a dezembro/2030.", "categoria": "Contratos", "processo": "Contrato nº ENELVVARI513173/25", "respInterno": "Samuel", "respExterno": "Matheus", "prazo": "", "diasRestantes": "", "status": "Aberto", "dataEncerramento": "", "linkDrive": "https://drive.google.com/drive/folders/1mz2fo9XgBSVNCo_s5I3edE42uEr542qb?usp=sharing", "email2": "", "email3": "", "obs": ""}, {"ticket": "RS/26-0021", "dataEntrada": "2026-05-12", "cliente": "REDE SANTANA COMBUSTIVEIS CASTELO BOM JESUS 2 LTDA", "cnpj": "31.251.776/0001-08", "tipoDemanda": "Processo Judicial", "origem": "Posto Santana 3 / CNJ", "emailEnviado": "posto.santana3@gmail.com", "tituloEmail": "Fwd: Notificação domicilio eletrônico", "descricao": "Reclamação trabalhista ajuizada por Gleidson Fonseca Lima em face de CVO Serviços e Rede Santana Castelo Bom Jesus 2. Audiência inicial virtual designada para 16/06/2026.", "categoria": "Trabalhista Judicial", "processo": "0010319-82.2026.5.03.0171", "respInterno": "Samuel", "respExterno": "Jordânia", "prazo": "2026-06-16", "diasRestantes": "", "status": "Aguardando documento", "dataEncerramento": "", "linkDrive": "https://drive.google.com/drive/folders/1Vz8wHVoTvPMSVFDjzhIS4dGmYIijL7bY?usp=sharing", "email2": "", "email3": "", "obs": ""}, {"ticket": "RS/26-0022", "dataEntrada": "2026-05-12", "cliente": "AUTO POSTO MACPETRO LTDA", "cnpj": "06.032.070/0001-08", "tipoDemanda": "ANP", "origem": "Rede Santana", "emailEnviado": "macpetro@redesantana.com.br", "tituloEmail": "Decisão condenatória ANP", "descricao": "ANP notifica decisão condenatória com aplicação de multa. Processo ANP nº 48640.200721/2024-94, Auto de Infração nº 660861. Prazo de 30 dias para pagamento e 10 dias para recurso.", "categoria": "Cível Administrativo", "processo": "48640.200721/2024-94", "respInterno": "Samuel", "respExterno": "", "prazo": "2026-05-22", "diasRestantes": "", "status": "Aberto", "dataEncerramento": "", "linkDrive": "https://drive.google.com/drive/folders/1_ZsCsSIymrmTG_CigHbbm-S2kiXhMjXE", "email2": "", "email3": "", "obs": ""}, {"ticket": "RS/26-0023", "dataEntrada": "2026-05-12", "cliente": "REDE SANTANA COMBUSTÍVEIS LTDA", "cnpj": "45.333.421/0001-72", "tipoDemanda": "Ministério Público", "origem": "Priscila", "emailEnviado": "posto.santana3@gmail.com", "tituloEmail": "NOT 2736/2026 - MPT SOLICITA DOCUMENTOS", "descricao": "Ministério Público do Trabalho notifica para apresentação de documentos em 20 dias: relação de trabalhadores atuais e demitidos nos últimos dois anos e convenção coletiva de trabalho.", "categoria": "Trabalhista Administrativo", "processo": "002052.2025.03.000/6", "respInterno": "Samuel", "respExterno": "Priscila", "prazo": "2026-06-01", "diasRestantes": "", "status": "Aberto", "dataEncerramento": "", "linkDrive": "https://drive.google.com/drive/folders/1DE5uarsWwNc-1di77ccTGQWL2E-mwuO2", "email2": "", "email3": "", "obs": ""}, {"ticket": "RS/26-0024", "dataEntrada": "2026-05-12", "cliente": "Rede Santana Perdões", "cnpj": "", "tipoDemanda": "Processo Judicial", "origem": "Caique Miller Magalhães", "emailEnviado": "gentilperdoes@outlook.com", "tituloEmail": "MANDADO DE CITAÇÃO E INTIMAÇÃO", "descricao": "Mandado de citação e intimação. Processo nº 5002456-79.2025.8.13.0499.", "categoria": "Cível Judicial", "processo": "5002456-79.2025.8.13.0499", "respInterno": "Samuel", "respExterno": "", "prazo": "2026-05-13", "diasRestantes": "", "status": "Aberto", "dataEncerramento": "", "linkDrive": "https://drive.google.com/drive/folders/1ez7hJnWfdZc3ALm4iaEWm26ffK8Dc2uU", "email2": "", "email3": "", "obs": ""}, {"ticket": "RS/26-0025", "dataEntrada": "2026-05-12", "cliente": "Auto Posto Expresso Amazonas Comércio de Combustíveis Ltda", "cnpj": "", "tipoDemanda": "Processo Judicial", "origem": "Jordânia", "emailEnviado": "santana.dpessoal@gmail.com", "tituloEmail": "Edvaldo dos Santos - Solicitação de retificação de CTPS", "descricao": "Vara do Trabalho determina retificação de CTPS do trabalhador Edvaldo dos Santos (cargo: Gerente de Pista). Prazo para envio do comprovante: 27/05/2026.", "categoria": "Trabalhista Judicial", "processo": "0010071-87.2026.5.03.0019", "respInterno": "Samuel", "respExterno": "Jordânia", "prazo": "2026-05-27", "diasRestantes": "", "status": "Aberto", "dataEncerramento": "", "linkDrive": "https://drive.google.com/drive/folders/1_YRw5_NzDCrTA5Nq-V6ezWHh03vBpkwc", "email2": "", "email3": "", "obs": ""}, {"ticket": "RS/26-0026", "dataEntrada": "2026-05-12", "cliente": "Rede Santana", "cnpj": "", "tipoDemanda": "ANP", "origem": "Riclei", "emailEnviado": "riclei@redesantana.com.br", "tituloEmail": "Fwd: ANP - Pendência - Pedido de Parcelamento", "descricao": "ANP notifica pendência em pedido de parcelamento administrativo. Processo ANP nº 48640.200808/2023-81.", "categoria": "Cível Administrativo", "processo": "48640.200808/2023-81", "respInterno": "Samuel", "respExterno": "", "prazo": "2026-05-13", "diasRestantes": "", "status": "Aberto", "dataEncerramento": "", "linkDrive": "https://drive.google.com/drive/folders/18IzL9lBK7-xSipqEM-a8g_WeMd5gh7QC", "email2": "", "email3": "", "obs": ""}, {"ticket": "RS/26-0027", "dataEntrada": "2026-05-13", "cliente": "POSTO SANTANA IV LTDA", "cnpj": "17.197.999/0001-03", "tipoDemanda": "MTE", "origem": "Ministério do Trabalho e Emprego", "emailEnviado": "posto.santana3@gmail.com", "tituloEmail": "Nova Mensagem na Caixa Postal - MTE", "descricao": "Auto de Infração nº 23.278.319-5 por suposta terceirização ilícita e ausência de anotação da CTPS digital de 11 trabalhadores. Prazo de 10 dias para defesa administrativa.", "categoria": "Trabalhista Administrativo", "processo": "Processo 14152.100011/2026-15 | Auto de Infração 23.278.319-5", "respInterno": "Samuel", "respExterno": "Phillipe", "prazo": "2026-05-22", "diasRestantes": "", "status": "Aberto", "dataEncerramento": "", "linkDrive": "https://drive.google.com/drive/folders/13hBjs21ihP9c2vYIozxNZrUVdnsmyVPS?usp=sharing", "email2": "", "email3": "", "obs": ""}, {"ticket": "RS/26-0028", "dataEntrada": "2026-05-14", "cliente": "AUTO POSTO NAVEGANTES LTDA", "cnpj": "07.200.913/0001-09", "tipoDemanda": "Notificação Extrajudicial", "origem": "Banco do Brasil S.A.", "emailEnviado": "navegantes@redesantana.com.br", "tituloEmail": "NOTIFICAÇÃO - Banco do Brasil", "descricao": "Banco do Brasil notifica inadimplência referente a parcelamento de dívidas, com possibilidade de vencimento antecipado e medidas judiciais se não houver regularização em 10 dias úteis.", "categoria": "Cível Administrativo", "processo": "Protocolo: Contrato nº 317526963", "respInterno": "Samuel", "respExterno": "Jéssica", "prazo": "2026-05-27", "diasRestantes": "", "status": "Em andamento", "dataEncerramento": "", "linkDrive": "https://drive.google.com/drive/folders/14dsml3af88-O9jyDWGSQCNRTjiFHUlLw?usp=sharing", "email2": "", "email3": "", "obs": ""}, {"ticket": "RS/26-0029", "dataEntrada": "2026-05-14", "cliente": "POSTO REDE BELS LTDA", "cnpj": "24.093.799/0001-76", "tipoDemanda": "Notificação Extrajudicial", "origem": "MAREGA MARTINS ADVOGADOS ASSOCIADOS", "emailEnviado": "postoredebells@gmail.com", "tituloEmail": "NOTIFICAÇÃO EXTRAJUDICIAL DE COBRANÇA", "descricao": "Notificação extrajudicial referente a débito de R$ 21.188,29 junto à GC LOCAÇÃO DE EQUIPAMENTOS LTDA, com aviso de medidas judiciais.", "categoria": "Cível Administrativo", "processo": "Protocolo: Processo 2600075775", "respInterno": "Samuel", "respExterno": "Jéssica", "prazo": "2026-05-16", "diasRestantes": "", "status": "Em andamento", "dataEncerramento": "", "linkDrive": "https://drive.google.com/drive/folders/1k9krdV9qdEhUV169iqLo0HGx013HJF4-?usp=sharing", "email2": "", "email3": "", "obs": ""}, {"ticket": "RS/26-0030", "dataEntrada": "2026-05-14", "cliente": "POSTO ESTRELA DO SUL LTDA", "cnpj": "19.651.123/0001-10", "tipoDemanda": "ANP", "origem": "ANP / Agente Túlio Cesar Aguiar Silva", "emailEnviado": "postoestrelasul@gmail.com", "tituloEmail": "FISCALIZAÇÃO ANP 13052026", "descricao": "Fiscalização da ANP resultou em Auto de Infração por ausência de atualização cadastral do quadro societário. Houve coleta de amostras de combustíveis para análise.", "categoria": "Ambiental", "processo": "Documento de Fiscalização nº 281 000 26 31 705035", "respInterno": "Samuel", "respExterno": "Lívia (Ambiental)", "prazo": "2026-05-28", "diasRestantes": "", "status": "Em andamento", "dataEncerramento": "", "linkDrive": "https://drive.google.com/drive/folders/1MEeMjT241rv3b1V8S-aeedEJ3svKP-f_?usp=sharing", "email2": "", "email3": "", "obs": ""}, {"ticket": "RS/26-0031", "dataEntrada": "2026-05-14", "cliente": "REDE SANTANA COMBUSTIVEIS SETE LAGOAS LTDA", "cnpj": "26.738.629/0001-27", "tipoDemanda": "Processo Judicial", "origem": "TRT 3ª Região - Vara do Trabalho de Curvelo/MG", "emailEnviado": "posto.santana3@gmail.com", "tituloEmail": "ATOrd 0010713-46.2026.5.03.0056", "descricao": "Reclamação trabalhista de Alex Sandro Rodrigues pleiteando reconhecimento de grupo econômico, horas extras, adicional noturno, periculosidade e danos morais. Audiência 16/06/2026 às 08h40.", "categoria": "Trabalhista Judicial", "processo": "0010713-46.2026.5.03.0056", "respInterno": "Samuel", "respExterno": "Jordânia", "prazo": "2026-06-08", "diasRestantes": "", "status": "Aguardando documento", "dataEncerramento": "", "linkDrive": "https://drive.google.com/drive/folders/10w8j2Q5UZC-iFA00KYjB9PYDjabki6nA?usp=sharing", "email2": "", "email3": "", "obs": ""}, {"ticket": "RS/26-0032", "dataEntrada": "2026-05-15", "cliente": "POSTO MAXX", "cnpj": "42.377.851/0001-06", "tipoDemanda": "Outros", "origem": "INEMA", "emailEnviado": "maxx@redesantana.com.br", "tituloEmail": "NOTIFICAÇÃO INEMA - POSTO MAXX", "descricao": "INEMA realizou inspeção ambiental e notificou irregularidades estruturais e ausência de caixa separadora. Prazo de 120 dias para projeto corretivo.", "categoria": "Ambiental", "processo": "", "respInterno": "Samuel", "respExterno": "Lívia (Ambiental)", "prazo": "2026-09-07", "diasRestantes": "", "status": "Em andamento", "dataEncerramento": "", "linkDrive": "https://drive.google.com/drive/folders/1f1sjWIEO1aNMptkM3VryGQ7WGdbb5BwF?usp=sharing", "email2": "", "email3": "", "obs": ""}, {"ticket": "RS/26-0033", "dataEntrada": "2026-05-15", "cliente": "POSTO DE COMBUSTIVEIS SERRA LTDA", "cnpj": "50.301.756/0001-49", "tipoDemanda": "ANP", "origem": "POSTO DA SERRA / ANP", "emailEnviado": "postoserra.redesantana@gmail.com", "tituloEmail": "NOTIFICAÇÃO ANP POSTO DE COMBUSTIVEIS SERRA LTDA", "descricao": "ANP lavrou Auto de Infração por ausência de atualização cadastral do quadro societário. Houve coleta de combustíveis sem inconformidades nos testes preliminares.", "categoria": "Ambiental", "processo": "Protocolo: DF nº 281 000 26 31 705038", "respInterno": "Samuel", "respExterno": "Lívia (Ambiental)", "prazo": "2026-05-29", "diasRestantes": "", "status": "Em andamento", "dataEncerramento": "", "linkDrive": "https://drive.google.com/drive/folders/10sYY4GDKyZU5l1K_B4n-kdExnVZTCMf-?usp=sharing", "email2": "", "email3": "", "obs": ""}, {"ticket": "RS/26-0034", "dataEntrada": "2026-05-15", "cliente": "POSTO ESTRELA DO SUL LTDA", "cnpj": "19.651.123/0001-10", "tipoDemanda": "PROCON", "origem": "PROCON Municipal de Serra/ES", "emailEnviado": "postoestrelasul@gmail.com", "tituloEmail": "NOTIFICAÇÃO PROCON 13052026", "descricao": "PROCON de Serra/ES notificou o posto para apresentação de planilha com preços praticados e notas fiscais de compra. Processo nº 28.038/2026.", "categoria": "Cível Administrativo", "processo": "Processo nº 28.038/2026", "respInterno": "Samuel", "respExterno": "Jéssica", "prazo": "2026-05-20", "diasRestantes": "", "status": "Em andamento", "dataEncerramento": "", "linkDrive": "https://drive.google.com/drive/folders/1d89hMiwSITj7FBhBCVuZS0z1wUQUKBqQ?usp=sharing", "email2": "", "email3": "", "obs": ""}, {"ticket": "RS/26-0035", "dataEntrada": "2026-05-15", "cliente": "LB COMÉRCIO DE COMBUSTÍVEIS LTDA.", "cnpj": "", "tipoDemanda": "Notificação Extrajudicial", "origem": "ECO101 Concessionária de Rodovias S/A", "emailEnviado": "serra@redesantana.com.br", "tituloEmail": "Intervenção não autorizada na faixa de domínio - km 284+700 BR-101/ES", "descricao": "Concessionária notificou para desocupação integral da faixa de domínio por ocupação irregular no km 284+700 da BR-101/ES.", "categoria": "Cível Administrativo", "processo": "Protocolo: ECPX FXD 1205/26", "respInterno": "Samuel", "respExterno": "Jéssica", "prazo": "2026-05-18", "diasRestantes": "", "status": "Aguardando cliente", "dataEncerramento": "", "linkDrive": "https://drive.google.com/drive/folders/1wGEAtN5WsNSfauKCylyTdo8jc1YHFrvq?usp=sharing", "email2": "", "email3": "", "obs": ""}, {"ticket": "RS/26-0036", "dataEntrada": "2026-05-18", "cliente": "AUTO POSTO ALMENARA MINAS LTDA", "cnpj": "49.086.429/0001-32", "tipoDemanda": "ANTT", "origem": "ANTT", "emailEnviado": "almenara@redesantana.com.br", "tituloEmail": "Boletos da ANTT", "descricao": "Notificações e boletos da ANTT referentes a infrações de piso mínimo de frete e vale-pedágio. Um dos boletos já recebido com vencimento expirado.", "categoria": "Cível Administrativo", "processo": "Protocolo: CRGTF00518612025 / FELTF00335522026", "respInterno": "Samuel", "respExterno": "Jéssica", "prazo": "", "diasRestantes": "", "status": "Em andamento", "dataEncerramento": "", "linkDrive": "https://drive.google.com/drive/folders/1kHw5O97tgjA0f4zThbkYwryHlUPudEK8?usp=sharing", "email2": "", "email3": "", "obs": ""}, {"ticket": "RS/26-0037", "dataEntrada": "2026-05-18", "cliente": "BHS Prestação de Serviços, Locação e Logística LTDA", "cnpj": "45.340.125/0001-07", "tipoDemanda": "Processo Judicial", "origem": "TRT 3ª Região - Vara do Trabalho de Contagem/MG", "emailEnviado": "contabilidadecaldeira@yahoo.com.br", "tituloEmail": "Fw: Notificação domicilio eletrônico - BHS", "descricao": "Ação trabalhista de Jorge Caitano de Oliveira pleiteando reconhecimento de acúmulo de função e nulidade da dispensa por incapacidade (hérnia discal).", "categoria": "Trabalhista Judicial", "processo": "0010783-30.2026.5.03.0164", "respInterno": "Samuel", "respExterno": "Jordânia", "prazo": "2026-06-01", "diasRestantes": "", "status": "Aguardando documento", "dataEncerramento": "", "linkDrive": "https://drive.google.com/drive/folders/1l1Kg56rkqYg8CCAds9RS7e-5wnbY8pYM?usp=sharing", "email2": "", "email3": "", "obs": ""}, {"ticket": "RS/26-0038", "dataEntrada": "2026-05-18", "cliente": "AUTO POSTO EXPRESSO AMAZONAS COMERCIO DE COMBUSTIVEIS LTDA", "cnpj": "33.972.298/0001-50", "tipoDemanda": "Processo Judicial", "origem": "TRT 3ª Região", "emailEnviado": "posto.santana3@gmail.com", "tituloEmail": "Fw: Notificação domicilio eletrônico - Andressa Santos", "descricao": "Ação trabalhista de Andressa Santos de Lima pleiteando reconhecimento de vínculo empregatício, verbas rescisórias e indenização por danos morais por assédio sexual.", "categoria": "Trabalhista Judicial", "processo": "0010431-40.2026.5.03.0013", "respInterno": "Samuel", "respExterno": "Jordânia", "prazo": "2026-06-15", "diasRestantes": "", "status": "Aguardando documento", "dataEncerramento": "", "linkDrive": "", "email2": "", "email3": "", "obs": ""}, {"ticket": "RS/26-0039", "dataEntrada": "2026-05-19", "cliente": "Posto Rede Santana de Combustíveis - VZP II", "cnpj": "", "tipoDemanda": "PROCON", "origem": "MPMG - 2ª Promotoria de Justiça de Várzea da Palma/MG", "emailEnviado": "redesantanavzp2@gmail.com", "tituloEmail": "Ofício n.º 010/2026/2ªPJVZP", "descricao": "PROCON notifica para recolhimento de multa de R$ 9.644,36 (com 30% de desconto) ou recurso administrativo no prazo de 10 dias úteis.", "categoria": "Cível Administrativo", "processo": "PA Procon nº 52.16.0708.0121215.2024-28", "respInterno": "Samuel", "respExterno": "Jéssica", "prazo": "2026-06-01", "diasRestantes": "", "status": "Em andamento", "dataEncerramento": "", "linkDrive": "https://drive.google.com/drive/folders/1xujZgvUqRP3Ls72IIo55nHck3H6pq9uP?usp=sharing", "email2": "", "email3": "", "obs": ""}, {"ticket": "RS/26-0040", "dataEntrada": "2026-05-20", "cliente": "Rede Santana Combustíveis Leopoldina Ltda", "cnpj": "33.059.278/0001-93", "tipoDemanda": "Locação", "origem": "Janaína / Setor de Impostos", "emailEnviado": "santana.contasapagar@gmail.com", "tituloEmail": "Fwd: IPTU Leopoldina", "descricao": "Guias de IPTU referentes ao imóvel do posto Leopoldina I. Análise sobre responsabilidade pelo pagamento das 5 inscrições imobiliárias dos exercícios 2025 e 2026.", "categoria": "Locação", "processo": "", "respInterno": "Samuel", "respExterno": "Matheus", "prazo": "2026-05-29", "diasRestantes": "", "status": "Em andamento", "dataEncerramento": "", "linkDrive": "https://drive.google.com/drive/folders/1FOIkAPAox_OjWvl5gBnLvpbt-l6PG885?usp=sharing", "email2": "", "email3": "", "obs": ""}, {"ticket": "RS/26-0041", "dataEntrada": "2026-05-20", "cliente": "COMERCIO DE COMBUSTIVEIS OUROMINAS LTDA", "cnpj": "11.851.012/0002-27", "tipoDemanda": "Ministério Público", "origem": "MPT - Patos de Minas", "emailEnviado": "vilarica@redesantana.com.br", "tituloEmail": "MINISTERIO PUBLICO - INQUERITO OURO MINAS 2", "descricao": "Instauração de Inquérito Civil pelo MPT para apuração de irregularidades no meio ambiente do trabalho. Documentos a apresentar em 30 dias.", "categoria": "Trabalhista Administrativo", "processo": "Inquérito Civil n.° 000148.2026.03.004/2", "respInterno": "Samuel", "respExterno": "Priscila", "prazo": "", "diasRestantes": "", "status": "Em andamento", "dataEncerramento": "", "linkDrive": "https://drive.google.com/drive/folders/165QVrE4o0tmbqzvd3mGH3lAOhb_qJKK7?usp=sharing", "email2": "", "email3": "", "obs": ""}, {"ticket": "RS/26-0042", "dataEntrada": "2026-05-20", "cliente": "KADOSHI DERIVADOS DE PETRÓLEO LTDA", "cnpj": "", "tipoDemanda": "Notificação Extrajudicial", "origem": "HUMBERTO SOLON SARMENTO FRANCO JÚNIOR", "emailEnviado": "irajuba@redesantana.com.br", "tituloEmail": "NOTIFICAÇÃO EXTRAJUDICIAL - POSTO IRAJUBA", "descricao": "Notificação por descumprimentos de contrato de locação comercial: ausência de apólice de seguro, vistoria, comprovação de repasses e diferenças de reajuste de aluguel.", "categoria": "", "processo": "", "respInterno": "Samuel", "respExterno": "Phillipe", "prazo": "", "diasRestantes": "", "status": "Em andamento", "dataEncerramento": "", "linkDrive": "https://drive.google.com/drive/folders/1W5881x40fc35TF1I7XOTLQSCIDxfXTD4?usp=sharing", "email2": "", "email3": "", "obs": ""}, {"ticket": "RS/26-0043", "dataEntrada": "2026-05-20", "cliente": "Posto Jojo V", "cnpj": "", "tipoDemanda": "Ministério Público", "origem": "Jordânia", "emailEnviado": "santana.dpessoal@gmail.com", "tituloEmail": "INTIMAÇÃO DO POSTO JOJO V", "descricao": "Intimação do PROCON Estadual de Minas Gerais, vinculada à 15ª Promotoria de Justiça de Contagem, em face de Rede Jojo de Combustíveis V Ltda.", "categoria": "Cível Judicial", "processo": "", "respInterno": "Samuel", "respExterno": "Jordânia", "prazo": "2026-05-21", "diasRestantes": "", "status": "Aberto", "dataEncerramento": "", "linkDrive": "https://drive.google.com/drive/folders/1Vm5n4RmUbmwGZNOKOqrCmf0FpZJ5LZzB", "email2": "", "email3": "", "obs": ""}, {"ticket": "RS/26-0044", "dataEntrada": "2026-05-20", "cliente": "REDE SANTANA COMBUSTIVEIS JANGADEIRO LTDA", "cnpj": "47.351.378/0001-01", "tipoDemanda": "PROCON", "origem": "Enzo", "emailEnviado": "enzo@redesantana.com.br", "tituloEmail": "AUTO DE FISCALIZAÇÃO", "descricao": "PROCON-MPMG autua posto por ostentar bandeira Petrobras mas comercializar combustíveis de outras distribuidoras. Auto de Fiscalização nº 26.14029.", "categoria": "Cível Administrativo", "processo": "2614029", "respInterno": "Samuel", "respExterno": "", "prazo": "2026-05-21", "diasRestantes": "", "status": "Aberto", "dataEncerramento": "", "linkDrive": "https://drive.google.com/drive/folders/1Axhf88Fn0LGYXJs73_HF6bKPLVSm7QaW", "email2": "", "email3": "", "obs": ""}, {"ticket": "RS/26-0045", "dataEntrada": "2026-05-20", "cliente": "COMERCIO DE COMBUSTIVEIS FREI I LTDA", "cnpj": "53.279.149/0001-18", "tipoDemanda": "Ministério Público", "origem": "Posto Primavera", "emailEnviado": "primavera@redesantana.com.br", "tituloEmail": "Ofício n.º 992/2026 - MPMG", "descricao": "MPMG notifica sobre Notícia de Fato originada de Auto de Infração nº 716724/2025. Informações sobre providências adotadas em 10 dias úteis.", "categoria": "Cível Administrativo", "processo": "02.16.0105.0355296.2026-65", "respInterno": "Samuel", "respExterno": "", "prazo": "2026-05-30", "diasRestantes": "", "status": "Aberto", "dataEncerramento": "", "linkDrive": "https://drive.google.com/drive/folders/1gpj4GJ-7epMjnZ9_3rb8g_2Uj_GsqF3E", "email2": "", "email3": "", "obs": ""}, {"ticket": "RS/26-0046", "dataEntrada": "2026-05-20", "cliente": "POSTO PETROMAXX IPATINGA LTDA", "cnpj": "05.120.495/0001-06", "tipoDemanda": "Notificação Extrajudicial", "origem": "Tauana Silva", "emailEnviado": "ipatinga@redesantana.com.br", "tituloEmail": "NOTIFICAÇÃO SERASA", "descricao": "Serasa notifica negativação do CNPJ por valores em aberto com a empresa SASCAR TECNOLOGIA E SEGURANÇA AUTOMOTIVA S/A.", "categoria": "Cível Administrativo", "processo": "", "respInterno": "Samuel", "respExterno": "", "prazo": "2026-05-21", "diasRestantes": "", "status": "Aberto", "dataEncerramento": "", "linkDrive": "https://drive.google.com/drive/folders/1XN2fzce7211fKdgBNzhFXc_BHduriig4", "email2": "", "email3": "", "obs": ""}, {"ticket": "RS/26-0047", "dataEntrada": "2026-05-21", "cliente": "Posto Canada", "cnpj": "23.156.540/0001-64", "tipoDemanda": "PROCON", "origem": "Posto Canada", "emailEnviado": "postocanada@redesantana.com.br", "tituloEmail": "AUTUAÇÃO PROCON 21/05/2026", "descricao": "PROCON autuação recebida em 21/05/2026.", "categoria": "Cível Administrativo", "processo": "", "respInterno": "Samuel", "respExterno": "", "prazo": "2026-05-22", "diasRestantes": "", "status": "Aberto", "dataEncerramento": "", "linkDrive": "https://drive.google.com/drive/folders/1fj7eySz2eHA3sxIftlE3VAv8VPmmk__M", "email2": "", "email3": "", "obs": ""}, {"ticket": "RS/26-0048", "dataEntrada": "2026-05-21", "cliente": "REDE SANTANA COMBUSTIVEIS", "cnpj": "42.640.567/0001-72", "tipoDemanda": "MTE", "origem": "Posto Santana 3", "emailEnviado": "posto.santana3@gmail.com", "tituloEmail": "Fwd: Nova Mensagem na Caixa Postal - MTE", "descricao": "Ministério do Trabalho e Emprego notifica nova mensagem na Caixa Postal do Domicílio Eletrônico Trabalhista.", "categoria": "Trabalhista Administrativo", "processo": "", "respInterno": "Samuel", "respExterno": "", "prazo": "2026-05-22", "diasRestantes": "", "status": "Aberto", "dataEncerramento": "", "linkDrive": "https://drive.google.com/drive/folders/1q7C4DHvlduoQlDbyjaGISHCWbj7rc5-x", "email2": "", "email3": "", "obs": ""}, {"ticket": "RS/26-0049", "dataEntrada": "2026-05-21", "cliente": "Auto Posto Expresso de Contagem Ltda", "cnpj": "38.831.120/0001-03", "tipoDemanda": "Ministério Público", "origem": "Expresso Contagem", "emailEnviado": "expressocontagem@redesantana.com.br", "tituloEmail": "Notificação Procon - Expresso Contagem", "descricao": "MPMG/PROCON notifica para envio de notas fiscais de compra e cupons fiscais de venda. Investigação Preliminar MPE n. 51.16.0079.0579341.2026-18. Prazo de 10 dias.", "categoria": "Cível Administrativo", "processo": "51.16.0079.0579341.2026-18", "respInterno": "Samuel", "respExterno": "", "prazo": "2026-05-31", "diasRestantes": "", "status": "Aberto", "dataEncerramento": "", "linkDrive": "https://drive.google.com/drive/folders/1g71lHhdvj2xoJFBqfSNn-fefWimZ2VbJ", "email2": "", "email3": "", "obs": ""}, {"ticket": "RS/26-0050", "dataEntrada": "2026-05-22", "cliente": "TERRA MAE COMERCIO DE COMBUSTIVEIS E LUBRIFICANTES LTDA", "cnpj": "09.283.024/0001-70", "tipoDemanda": "Notificação Extrajudicial", "origem": "IPIRANGA PRODUTOS DE PETRÓLEO S/A", "emailEnviado": "terramae@redesantana.com.br", "tituloEmail": "NOTIFICAÇÃO EXTRAJUDICIAL - Ipiranga", "descricao": "Ipiranga denuncia contrato de sublocação do posto solicitando desocupação do imóvel no prazo de 30 dias.", "categoria": "Contratos", "processo": "", "respInterno": "Samuel", "respExterno": "Jéssica", "prazo": "", "diasRestantes": "", "status": "Aberto", "dataEncerramento": "", "linkDrive": "https://drive.google.com/drive/folders/1pcgGhF2GyYG8QhzefOIc9ycHH9bkTyE6?usp=sharing", "email2": "", "email3": "", "obs": ""}, {"ticket": "RS/26-0051", "dataEntrada": "2026-05-22", "cliente": "Rede Santana Combustíveis Castelo Bom Jesus 2", "cnpj": "31.251.776/0001-08", "tipoDemanda": "ANP", "origem": "CASTELO 2 - REDE SANTANA", "emailEnviado": "p.bomjesus2@gmail.com", "tituloEmail": "Fwd: Citação de autuação Processo 48640.201242/2025-76", "descricao": "ANP notifica citação de autuação. Processo ANP nº 48640.201242/2025-76.", "categoria": "Cível Administrativo", "processo": "48640.201242/2025-76", "respInterno": "Samuel", "respExterno": "Lívia (Ambiental)", "prazo": "2026-05-23", "diasRestantes": "", "status": "Aberto", "dataEncerramento": "", "linkDrive": "https://drive.google.com/drive/folders/1vi8oQsAevyEHy6-VDsou--JI-PdrWpu7", "email2": "", "email3": "", "obs": ""}, {"ticket": "RS/26-0052", "dataEntrada": "2026-05-25", "cliente": "cvo servicos, locacao e logistica ltda", "cnpj": "45.333.779/0001-03", "tipoDemanda": "Processo Judicial", "origem": "Posto Santana 3", "emailEnviado": "posto.santana3@gmail.com", "tituloEmail": "Fwd: Fw: Notificação domicilio eletrônico - Bianca", "descricao": "Bianca de Jesus Brito Mendes ajuizou reclamação trabalhista por admissão sem registro, descontos indevidos e verbas rescisórias.", "categoria": "Trabalhista Judicial", "processo": "0010361-76.2026.5.03.0060", "respInterno": "Samuel", "respExterno": "Jordânia", "prazo": "2026-06-01", "diasRestantes": "", "status": "Aguardando documento", "dataEncerramento": "", "linkDrive": "https://drive.google.com/drive/folders/11gWkGtmbd1tDlXkZEHL95h5bceFn1Kfu?usp=sharing", "email2": "", "email3": "", "obs": ""}, {"ticket": "RS/26-0053", "dataEntrada": "2026-05-27", "cliente": "REDE SANTANA COMBUSTIVEIS BH I LTDA", "cnpj": "49.052.599/0001-04", "tipoDemanda": "Processo Judicial", "origem": "Posto Santana 3", "emailEnviado": "posto.santana3@gmail.com", "tituloEmail": "Fwd: Notificação domicilio eletrônico - BH I", "descricao": "Notificação de comunicação processual via Domicílio Judicial Eletrônico. Processo nº 0010479-65.2026.5.03.0185.", "categoria": "Cível Judicial", "processo": "0010479-65.2026.5.03.0185", "respInterno": "Samuel", "respExterno": "Jordânia", "prazo": "2026-06-22", "diasRestantes": "", "status": "Aguardando documento", "dataEncerramento": "", "linkDrive": "https://drive.google.com/drive/folders/1Ga_8Bf-oMEVT4BUCyxuh4PSog8DNv_j1", "email2": "", "email3": "", "obs": ""}, {"ticket": "RS/26-0054", "dataEntrada": "2026-05-27", "cliente": "REDE SANTANA COMBUSTIVEIS BH I LTDA", "cnpj": "49.052.599/0002-87", "tipoDemanda": "ANP", "origem": "BH2", "emailEnviado": "bh2@redesantana.com.br", "tituloEmail": "FISCALIZAÇÃO ANP - BH2", "descricao": "ANP notifica fiscalização com identificação de não conformidades em instrumentos de análise de qualidade e cadastro do posto. DF nº 2703242632701354.", "categoria": "Cível Administrativo", "processo": "2703242632701354", "respInterno": "Samuel", "respExterno": "Lívia (Ambiental)", "prazo": "2026-06-26", "diasRestantes": "", "status": "Aberto", "dataEncerramento": "", "linkDrive": "https://drive.google.com/drive/folders/1PgzPIQCZkUUomOo8Di43aZHO19601Lyo", "email2": "", "email3": "", "obs": ""}, {"ticket": "RS/26-0055", "dataEntrada": "2026-05-27", "cliente": "Posto Almada BH1", "cnpj": "", "tipoDemanda": "Outros", "origem": "Posto Almada", "emailEnviado": "postoalmada@redesantana.com.br", "tituloEmail": "NOTIFICAÇÃO DE AUTUAÇÃO - BH1", "descricao": "Notificação de autuação recebida pelo Posto Almada BH1.", "categoria": "Cível Administrativo", "processo": "", "respInterno": "Samuel", "respExterno": "", "prazo": "2026-05-28", "diasRestantes": "", "status": "Aberto", "dataEncerramento": "", "linkDrive": "https://drive.google.com/drive/folders/1ljHIqkcMwAR5VMfHskyS-rfVpBSMIqVi", "email2": "", "email3": "", "obs": ""}, {"ticket": "RS/26-0056", "dataEntrada": "2026-05-27", "cliente": "POSTO LEOPOLDINA LTDA.", "cnpj": "", "tipoDemanda": "PROCON", "origem": "Leticia Santos", "emailEnviado": "leopoldina@redesantana.com.br", "tituloEmail": "NOTIFICAÇÃO MPMG POSTO LEOPOLDINA LTDA.", "descricao": "PROCON exige envio de documentos em 10 dias úteis. Auto de Constatação/Comprovação nº 1.", "categoria": "Cível Administrativo", "processo": "", "respInterno": "Samuel", "respExterno": "Ricei", "prazo": "2026-06-06", "diasRestantes": "", "status": "Aberto", "dataEncerramento": "", "linkDrive": "https://drive.google.com/drive/folders/1SfvzjsO4hZmpPhKaLevlXcyZKsm3Tdko", "email2": "", "email3": "", "obs": ""}, {"ticket": "RS/26-0057", "dataEntrada": "2026-05-28", "cliente": "AUTO POSTO MUCURI LTDA", "cnpj": "", "tipoDemanda": "Outros", "origem": "Escritório João Gabriel", "emailEnviado": "WhatsApp João Gabriel", "tituloEmail": "Notificação nº 0517 - PCD", "descricao": "Adequação do ambiente do Posto para pessoas com deficiência (PCD).", "categoria": "Cível Administrativo", "processo": "", "respInterno": "Samuel", "respExterno": "Jéssica", "prazo": "", "diasRestantes": "", "status": "Aberto", "dataEncerramento": "", "linkDrive": "", "email2": "", "email3": "", "obs": ""}, {"ticket": "RS/26-0058", "dataEntrada": "2026-05-29", "cliente": "Posto Canada", "cnpj": "", "tipoDemanda": "Outros", "origem": "Telegrama Raizem S.A", "emailEnviado": "postocanada@redesantana.com.br", "tituloEmail": "Cobrança Raizem S.A", "descricao": "Cobrança de compra de combustível na distribuidora RAIZEM S.A — volume acordado não está sendo comprado.", "categoria": "Cível Administrativo", "processo": "", "respInterno": "Samuel", "respExterno": "Jéssica", "prazo": "", "diasRestantes": "", "status": "Aberto", "dataEncerramento": "", "linkDrive": "https://drive.google.com/drive/folders/1osfGXFJfZwJIVdq6q1Ll28s3uToNDL5j?usp=sharing", "email2": "", "email3": "", "obs": ""}, {"ticket": "RS/26-0060", "dataEntrada": "2026-05-29", "cliente": "Posto Santana 3", "cnpj": "", "tipoDemanda": "Processo Judicial", "origem": "Priscila", "emailEnviado": "posto.santana3@gmail.com", "tituloEmail": "Fwd: Carta Precatória - TASM", "descricao": "Carta Precatória recebida. Funcionário não faz mais parte da empresa desde 19/02/2026 (trabalhou no Posto Canadá).", "categoria": "Trabalhista Judicial", "processo": "", "respInterno": "Samuel", "respExterno": "Priscila", "prazo": "2026-05-30", "diasRestantes": "", "status": "Aberto", "dataEncerramento": "", "linkDrive": "https://drive.google.com/drive/folders/1x2xOrJgnqnXVNAk2B6bGxlP5TxJlRNg9", "email2": "", "email3": "", "obs": ""}, {"ticket": "RS/26-0061", "dataEntrada": "2026-05-29", "cliente": "Auto Posto Expresso Amazonas", "cnpj": "", "tipoDemanda": "Notificação Extrajudicial", "origem": "Posto Amazonas", "emailEnviado": "postoamazonas@redesantana.com.br", "tituloEmail": "Fwd: Re: NOTIFICAÇÃO EXTRAJUDICIAL - Heliano", "descricao": "Notificação extrajudicial de Heliano Pereira Conceição solicitando estorno de pagamento em duplicidade (31/03/2026). Prazo de 72 horas.", "categoria": "Cível Administrativo", "processo": "", "respInterno": "Samuel", "respExterno": "", "prazo": "2026-06-01", "diasRestantes": "", "status": "Aberto", "dataEncerramento": "", "linkDrive": "https://drive.google.com/drive/folders/1acLUPE_m5R_87Sug-8Pqc-8FxlksOOQd", "email2": "", "email3": "", "obs": ""}], "escritorio": [{"ticket": "PP-0001", "dataEntrada": "2026-05-05", "cliente": "José Lucas Neves", "cnpj": "419.762.838-25", "tipoDemanda": "Cível", "origem": "José Lucas", "local": "WhatsAPP", "descricao": "Reconhecimento/dissolução união estável, partilha de bens, guarda e alimentos.", "categoria": "Cível Judicial", "processo": "", "respInterno": "Phillipe", "respExterno": "", "prazo": "2026-05-06", "diasRestantes": "-25.0", "status": "Em andamento", "dataEncerramento": "", "linkDrive": "https://drive.google.com/drive/folders/1FAdiVYFIafbkTn3V5MTIakRJEWFzGwDJ?usp=sharing", "email2": "", "email3": "", "obs": ""}, {"ticket": "", "dataEntrada": "2026-05-09", "cliente": "POSTO ESTRELA DO SUL LTDA", "cnpj": "19.651.123/0001-10", "tipoDemanda": "ANP", "origem": "posto estrela sul", "local": "E-mail", "descricao": "ANP notifica envio de Documento de Fiscalização. DF nº 9839832631695787.", "categoria": "Cível Administrativo", "processo": "9839832631695788", "respInterno": "Samuel", "respExterno": "", "prazo": "", "diasRestantes": "", "status": "Aberto", "dataEncerramento": "", "linkDrive": "", "email2": "", "email3": "", "obs": ""}, {"ticket": "", "dataEntrada": "2026-05-06", "cliente": "POSTO ESTRELA DO SUL LTDA", "cnpj": "19.651.123/0001-10", "tipoDemanda": "ANP", "origem": "posto estrela sul", "local": "E-mail", "descricao": "ANP notifica envio de documentos (Certificado de Vistoria do Corpo de Bombeiros) em 15 dias. DF nº 98398326316957.", "categoria": "Cível Administrativo", "processo": "98398326316957", "respInterno": "Samuel", "respExterno": "", "prazo": "2026-05-24", "diasRestantes": "", "status": "Aberto", "dataEncerramento": "", "linkDrive": "", "email2": "", "email3": "", "obs": ""}]};
+
+var STATUS_OPTS=['Aberto','Em andamento','Aguardando documento','Aguardando cliente','Encerrado'];
+
+const TODAY = new Date(); TODAY.setHours(0,0,0,0);
+let S = {
+  view: 'rs-tickets',
+  data: { rs: JSON.parse(JSON.stringify(RAW.redeSantana)), es: JSON.parse(JSON.stringify(RAW.escritorio)) },
+  f: { q:'', status:'', tipo:'', cat:'', resp:'' },
+  page: 1, pp: 25
+};
+
+function fmtDate(s){ if(!s)return '—'; try{ return new Date(s+'T12:00:00').toLocaleDateString('pt-BR'); }catch(e){ return s; } }
+function diffDays(p){ if(!p)return null; const d=new Date(p+'T12:00:00'); return isNaN(d)?null:Math.floor((d-TODAY)/86400000); }
+function uCls(d){ if(d===null)return 'sem-prazo'; if(d<0)return 'vencido'; if(d===0)return 'hoje'; if(d===1)return 'amanha'; if(d<=3)return 'breve'; return 'ok'; }
+function uLbl(d,p){ if(d===null)return p?fmtDate(p):'Sem prazo'; if(d<0)return 'Vencido '+Math.abs(d)+'d'; if(d===0)return 'Vence hoje'; if(d===1)return 'Amanhã'; return fmtDate(p)+' ('+d+'d)'; }
+function sCls(s){ return {'Aberto':'blue','Em andamento':'amber','Aguardando documento':'orange','Aguardando cliente':'purple','Encerrado':'green'}[s]||'muted'; }
+function tCls(t){ return {'Processo Judicial':'blue','ANP':'amber','PROCON':'orange','Ministério Público':'purple','Notificação Extrajudicial':'muted','ANTT':'muted','MTE':'red','Locação':'green','Outros':'muted','Cível':'blue'}[t]||'muted'; }
+function ds(){ return S.view.startsWith('rs')?S.data.rs:S.data.es; }
+function uc(sec){ return S.data[sec].filter(function(r){ if(r.status==='Encerrado')return false; var d=diffDays(r.prazo); return d!==null&&d<=3; }).length; }
+
+function sortUrg(arr){
+  return arr.slice().sort(function(a,b){
+    var da=diffDays(a.prazo), db=diffDays(b.prazo);
+    if(da===null&&db===null)return 0;
+    if(da===null)return 1; if(db===null)return -1;
+    return da-db;
+  });
+}
+
+function filtered(){
+  var q=S.f.q.toLowerCase(), st=S.f.status, ti=S.f.tipo, ca=S.f.cat, re=S.f.resp;
+  var rows=ds().filter(function(r){
+    if(q&&JSON.stringify(r).toLowerCase().indexOf(q)<0)return false;
+    if(st&&r.status!==st)return false;
+    if(ti&&r.tipoDemanda!==ti)return false;
+    if(ca&&r.categoria!==ca)return false;
+    if(re&&r.respInterno!==re&&r.respExterno!==re)return false;
+    return true;
+  });
+  return sortUrg(rows);
+}
+
+function updateBadges(){
+  document.getElementById('b-rs-t').textContent=S.data.rs.length;
+  document.getElementById('b-es-t').textContent=S.data.es.length;
+  var ru=uc('rs'), eu=uc('es');
+  var bra=document.getElementById('b-rs-a'); bra.textContent=ru; bra.className='si-count'+(ru>0?' urgent':' ok');
+  var bea=document.getElementById('b-es-a'); bea.textContent=eu; bea.className='si-count'+(eu>0?' urgent':' ok');
+}
+
+function go(key,el){
+  S.view=key; S.page=1; S.f={q:'',status:'',tipo:'',cat:'',resp:''};
+  document.querySelectorAll('.sidebar-item').forEach(function(x){ x.classList.remove('active'); });
+  if(el) el.classList.add('active');
+  var t={'dash':'Visão Geral','rs-tickets':'Rede Santana — Tickets','rs-agenda':'Rede Santana — Demandas do Dia','es-tickets':'Escritório — Tickets','es-agenda':'Escritório — Demandas do Dia'};
+  document.getElementById('view-title').textContent=t[key]||key;
+  document.getElementById('btn-new').classList.toggle('hidden',!key.endsWith('tickets'));
+  document.getElementById('btn-csv').classList.toggle('hidden',!key.endsWith('tickets'));
+  render();
+}
+
+function render(){
+  updateBadges();
+  var c=document.getElementById('content');
+  if(S.view==='dash') c.innerHTML=renderDash();
+  else if(S.view.endsWith('tickets')) c.innerHTML=renderTickets();
+  else c.innerHTML=renderAgenda();
+  var f=filtered();
+  var subs={'dash':'','rs-tickets':f.length+' de '+S.data.rs.length+' tickets','rs-agenda':uc('rs')+' demandas urgentes','es-tickets':f.length+' de '+S.data.es.length+' tickets','es-agenda':uc('es')+' demandas urgentes'};
+  document.getElementById('view-sub').textContent=subs[S.view]||'';
+  // Table status save delegation
+  var ca=document.getElementById('content');
+  ca.onclick=function(e){
+    var btn=e.target.closest('.tbl-save-btn');
+    if(btn){
+      e.stopPropagation();
+      saveTblStatus(btn.getAttribute('data-sec'), parseInt(btn.getAttribute('data-idx')));
+    }
+  };
+}
+
+function opt(val, selected){ return '<option value="'+val+'"'+(selected?' selected':'')+'>'+val+'</option>'; }
+function mkSelect(id, vals, cur, onch){
+  var html='<select class="filter-select" id="'+id+'" onchange="'+onch+'">';
+  vals.forEach(function(v){ html+='<option value="'+v+'"'+(cur===v?' selected':'')+'>'+v+'</option>'; });
+  return html+'</select>';
+}
+
+function renderTickets(){
+  var d=ds();
+  function uniq(arr){ return arr.filter(function(v,i,a){ return v&&a.indexOf(v)===i; }); }
+  var uSt=uniq(d.map(function(r){ return r.status; }));
+  var uTi=uniq(d.map(function(r){ return r.tipoDemanda; }));
+  var uCa=uniq(d.map(function(r){ return r.categoria; }));
+  var uRe=uniq(d.map(function(r){ return r.respInterno; }).concat(d.map(function(r){ return r.respExterno; })));
+  var rows=filtered(), total=rows.length;
+  var start=(S.page-1)*S.pp;
+  var pr=rows.slice(start,start+S.pp);
+  var tp=Math.max(1,Math.ceil(total/S.pp));
+  var ativos=rows.filter(function(r){ return r.status&&r.status!=='Encerrado'; }).length;
+  var venc=rows.filter(function(r){ var d=diffDays(r.prazo); return r.status!=='Encerrado'&&d!==null&&d<0; }).length;
+  var urg=rows.filter(function(r){ var d=diffDays(r.prazo); return r.status!=='Encerrado'&&d!==null&&d>=0&&d<=3; }).length;
+  var enc=rows.filter(function(r){ return r.status==='Encerrado'; }).length;
+
+  var stats='<div class="stats-row">'
+    +'<div class="stat-card"><div class="sc-val">'+total+'</div><div class="sc-label">Total</div></div>'
+    +'<div class="stat-card blue"><div class="sc-val">'+ativos+'</div><div class="sc-label">Em aberto</div></div>'
+    +'<div class="stat-card red"><div class="sc-val">'+venc+'</div><div class="sc-label">Vencidos</div></div>'
+    +'<div class="stat-card amber"><div class="sc-val">'+urg+'</div><div class="sc-label">Vence em 3d</div></div>'
+    +'<div class="stat-card green"><div class="sc-val">'+enc+'</div><div class="sc-label">Encerrados</div></div>'
+    +'</div>';
+
+  var stOpts='<option value="">Todos os status</option>'+uSt.map(function(v){ return '<option value="'+v+'"'+(S.f.status===v?' selected':'')+'>'+v+'</option>'; }).join('');
+  var tiOpts='<option value="">Todos os tipos</option>'+uTi.map(function(v){ return '<option value="'+v+'"'+(S.f.tipo===v?' selected':'')+'>'+v+'</option>'; }).join('');
+  var caOpts='<option value="">Todas as categorias</option>'+uCa.map(function(v){ return '<option value="'+v+'"'+(S.f.cat===v?' selected':'')+'>'+v+'</option>'; }).join('');
+  var reOpts='<option value="">Todos os responsáveis</option>'+uRe.map(function(v){ return '<option value="'+v+'"'+(S.f.resp===v?' selected':'')+'>'+v+'</option>'; }).join('');
+
+  var toolbar='<div class="toolbar">'
+    +'<div class="search-wrap"><span class="search-icon">🔍</span>'
+    +'<input type="text" placeholder="Buscar ticket, cliente, processo..." id="inp-q" value="'+S.f.q+'" oninput="S.f.q=this.value;S.page=1;render()">'
+    +'</div>'
+    +'<select class="filter-select" onchange="S.f.status=this.value;S.page=1;render()">'+stOpts+'</select>'
+    +'<select class="filter-select" onchange="S.f.tipo=this.value;S.page=1;render()">'+tiOpts+'</select>'
+    +'<select class="filter-select" onchange="S.f.cat=this.value;S.page=1;render()">'+caOpts+'</select>'
+    +'<select class="filter-select" onchange="S.f.resp=this.value;S.page=1;render()">'+reOpts+'</select>'
+    +(S.f.q||S.f.status||S.f.tipo||S.f.cat||S.f.resp?'<button class="btn sm ghost" onclick="S.f={q:\'\',status:\'\',tipo:\'\',cat:\'\',resp:\'\'};S.page=1;render()">✕ Limpar</button>':'')
+    +'</div>';
+
+  var tbody='';
+  if(pr.length===0){
+    tbody='<tr><td colspan="8"><div class="empty-state"><div class="es-icon">📭</div><p>Nenhum ticket encontrado.</p></div></td></tr>';
+  } else {
+    pr.forEach(function(r){
+      var ri=ds().indexOf(r);
+      var sec=S.view.startsWith('rs')?'rs':'es';
+      var d=diffDays(r.prazo);
+      var uc2=uCls(d);
+      var rc=uc2==='vencido'?'row-vencido':(uc2==='amanha'||uc2==='hoje'?'row-urgente':'');
+      var ext=r.respExterno&&r.respExterno!==r.respInterno?'<div style="color:var(--text-muted);font-size:11px">'+r.respExterno+'</div>':'';
+      var drv=r.linkDrive?'<a href="'+r.linkDrive+'" target="_blank" class="btn sm ghost" style="padding:4px 6px" title="Drive">📁</a> ':'';
+      tbody+='<tr class="clickable '+rc+'" onclick="openDetail('+ri+')">'
+        +'<td><span style="font-size:11px;font-weight:700;color:var(--accent);letter-spacing:.3px">'+(r.ticket||'—')+'</span></td>'
+        +'<td><div class="clip" title="'+r.cliente+'" style="font-weight:500;color:var(--navy)">'+(r.cliente||'—')+'</div></td>'
+        +'<td><span class="badge '+tCls(r.tipoDemanda)+'">'+(r.tipoDemanda||'—')+'</span></td>'
+        +'<td><div class="clip" style="font-size:12px;color:var(--text-dim)">'+(r.categoria||'—')+'</div></td>'
+        +'<td><div style="font-size:12px"><div style="font-weight:600">'+(r.respInterno||'—')+'</div>'+ext+'</div></td>'
+        +'<td><span class="deadline-chip '+uc2+'">'+uLbl(d,r.prazo)+'</span></td>'
+        +'<td onclick="event.stopPropagation()">'
+        +'<div class="tbl-status-wrap">'
+        +'<select class="tbl-status-select" data-sec="'+sec+'" data-idx="'+ri+'">'
+        +STATUS_OPTS.map(function(o){ return '<option value="'+o+'"'+(r.status===o?' selected':'')+'>'+o+'</option>'; }).join('')
+        +'</select>'
+        +'<button class="tbl-save-btn" data-sec="'+sec+'" data-idx="'+ri+'">✓</button>'
+        +'</div></td>'
+        +'<td onclick="event.stopPropagation()" class="nowrap">'+drv
+        +'<button class="btn sm ghost" style="padding:4px 6px" onclick="openEdit('+ri+')" title="Editar">✏️</button> '
+        +'<button class="btn sm ghost" style="padding:4px 6px" onclick="confirmDel('+ri+')" title="Excluir">🗑</button>'
+        +'</td></tr>';
+    });
+  }
+
+  var pages='';
+  for(var i=1;i<=tp;i++) pages+='<button class="page-btn'+(S.page===i?' active':'')+'" onclick="S.page='+i+';render()">'+i+'</button>';
+  var shown=total===0?'0':''+Math.min(start+1,total)+'–'+Math.min(start+S.pp,total);
+  var pag='<div class="pagination"><span>Mostrando '+shown+' de '+total+'</span>'
+    +'<div class="page-btns">'
+    +'<button class="page-btn" onclick="S.page=Math.max(1,S.page-1);render()"'+(S.page===1?' disabled':'')+'>‹</button>'
+    +pages
+    +'<button class="page-btn" onclick="S.page=Math.min('+tp+',S.page+1);render()"'+(S.page===tp?' disabled':'')+'>›</button>'
+    +'</div></div>';
+
+  return stats+toolbar+'<div class="table-wrap"><table><thead><tr>'
+    +'<th>Ticket</th><th>Cliente / Posto</th><th>Tipo</th><th>Categoria</th>'
+    +'<th>Responsáveis</th><th>Prazo</th><th>Status</th><th></th>'
+    +'</tr></thead><tbody>'+tbody+'</tbody></table></div>'+pag;
+}
+
+function renderAgenda(){
+  var rows=ds().filter(function(r){ return r.status!=='Encerrado'; });
+  var sorted=sortUrg(rows).filter(function(r){ var d=diffDays(r.prazo); return d!==null&&d<=3; });
+  var venc=sorted.filter(function(r){ return diffDays(r.prazo)<0; });
+  var hj=sorted.filter(function(r){ return diffDays(r.prazo)===0; });
+  var am=sorted.filter(function(r){ return diffDays(r.prazo)===1; });
+  var br=sorted.filter(function(r){ var d=diffDays(r.prazo); return d>=2&&d<=3; });
+
+  function cards(list,cls){
+    if(!list.length) return '<p style="color:var(--text-muted);font-size:13px;padding:4px 0">Nenhuma demanda.</p>';
+    return list.map(function(r){
+      var ri=ds().indexOf(r); var d=diffDays(r.prazo);
+      var drv=r.linkDrive?'<a href="'+r.linkDrive+'" target="_blank" class="btn sm ghost" onclick="event.stopPropagation()">📁 Drive</a>':'';
+      var ri2=r.respInterno?'<span class="badge muted">👤 '+r.respInterno+'</span>':'';
+      return '<div class="agenda-card '+cls+'" onclick="openDetail('+ri+')">'
+        +'<div class="ac-top"><div><div class="ac-ticket">'+(r.ticket||'SEM TICKET')+'</div>'
+        +'<div class="ac-cliente">'+(r.cliente||'—')+'</div></div>'
+        +'<span class="deadline-chip '+uCls(d)+'">'+uLbl(d,r.prazo)+'</span></div>'
+        +'<div class="ac-desc">'+(r.descricao||'—')+'</div>'
+        +'<div class="ac-meta"><span class="badge '+tCls(r.tipoDemanda)+'">'+(r.tipoDemanda||'—')+'</span>'
+        +'<span class="badge '+sCls(r.status)+'">'+(r.status||'—')+'</span>'+ri2+drv+'</div>'
+        +'</div>';
+    }).join('');
+  }
+
+  var stats='<div class="stats-row">'
+    +'<div class="stat-card red"><div class="sc-val">'+venc.length+'</div><div class="sc-label">🔴 Vencidos</div></div>'
+    +'<div class="stat-card" style="border-left:3px solid var(--orange)"><div class="sc-val" style="color:var(--orange)">'+hj.length+'</div><div class="sc-label">🟠 Hoje</div></div>'
+    +'<div class="stat-card amber"><div class="sc-val">'+am.length+'</div><div class="sc-label">🟡 Amanhã</div></div>'
+    +'<div class="stat-card blue"><div class="sc-val">'+br.length+'</div><div class="sc-label">🔵 Em 3 dias</div></div>'
+    +'</div>';
+
+  var secs=[
+    {list:venc,cls:'vencido',label:'🔴 Vencidos',color:'var(--red)',bg:'var(--red-bg)'},
+    {list:hj,cls:'hoje',label:'🟠 Vencem Hoje',color:'var(--orange)',bg:'var(--orange-bg)'},
+    {list:am,cls:'amanha',label:'🟡 Amanhã',color:'var(--amber)',bg:'var(--amber-bg)'},
+    {list:br,cls:'breve',label:'🔵 Em até 3 dias',color:'var(--accent)',bg:'var(--blue-bg)'}
+  ];
+  var body=secs.filter(function(s){ return s.list.length>0; }).map(function(s){
+    return '<div class="agenda-section"><div class="agenda-section-header">'
+      +'<h3 style="color:'+s.color+'">'+s.label+'</h3>'
+      +'<span class="agenda-count" style="background:'+s.bg+';color:'+s.color+'">'+s.list.length+'</span>'
+      +'</div>'+cards(s.list,s.cls)+'</div>';
+  }).join('');
+
+  return stats+(body||'<div class="empty-state"><div class="es-icon">✅</div><p>Nenhuma demanda urgente no momento.</p></div>');
+}
+
+function renderDash(){
+  var all=S.data.rs.concat(S.data.es);
+  var ativos=all.filter(function(r){ return r.status&&r.status!=='Encerrado'; });
+  var venc=ativos.filter(function(r){ var d=diffDays(r.prazo); return d!==null&&d<0; });
+  var urg=ativos.filter(function(r){ var d=diffDays(r.prazo); return d!==null&&d>=0&&d<=3; });
+  var enc=all.filter(function(r){ return r.status==='Encerrado'; });
+
+  var rm={};
+  all.forEach(function(r){
+    [r.respInterno,r.respExterno].forEach(function(name){
+      if(!name)return;
+      if(!rm[name]) rm[name]={total:0,ativos:0,venc:0,urg:0};
+      rm[name].total++;
+      if(r.status!=='Encerrado') rm[name].ativos++;
+      var d=diffDays(r.prazo);
+      if(d!==null&&d<0&&r.status!=='Encerrado') rm[name].venc++;
+      if(d!==null&&d>=0&&d<=3&&r.status!=='Encerrado') rm[name].urg++;
+    });
+  });
+
+  var rcards=Object.keys(rm).sort(function(a,b){ return rm[b].ativos-rm[a].ativos; }).map(function(name){
+    var v=rm[name];
+    return '<div class="team-card" data-resp="'+name+'" onclick="openDrawerFromCard(this)">'
+      +'<div class="tc-name"><div class="tc-avatar">'+name.slice(0,2).toUpperCase()+'</div>'+name
+      +'<span style="margin-left:auto;font-size:10px;color:var(--text-muted);font-weight:400">ver →</span></div>'
+      +'<div class="tc-row"><span>Total de tickets</span><strong>'+v.total+'</strong></div>'
+      +'<div class="tc-row"><span>Em aberto</span><strong style="color:var(--accent)">'+v.ativos+'</strong></div>'
+      +'<div class="tc-divider"></div>'
+      +'<div class="tc-row"><span>🔴 Vencidos</span><strong style="color:'+(v.venc>0?'var(--red)':'var(--text-muted)')+'">'+v.venc+'</strong></div>'
+      +'<div class="tc-row"><span>⚡ Urgentes (3d)</span><strong style="color:'+(v.urg>0?'var(--amber)':'var(--text-muted)')+'">'+v.urg+'</strong></div>'
+      +'</div>';
+  }).join('');
+
+  var cm={}, tm={};
+  S.data.rs.filter(function(r){ return r.status!=='Encerrado'; }).forEach(function(r){
+    if(r.categoria) cm[r.categoria]=(cm[r.categoria]||0)+1;
+    if(r.tipoDemanda) tm[r.tipoDemanda]=(tm[r.tipoDemanda]||0)+1;
+  });
+  var ct=Object.values(cm).reduce(function(a,b){ return a+b; },0)||1;
+  var tt=Object.values(tm).reduce(function(a,b){ return a+b; },0)||1;
+  function barRows(map,total,color){
+    return Object.keys(map).sort(function(a,b){ return map[b]-map[a]; }).map(function(k){
+      return '<div class="cat-row"><div class="cat-label">'+k+'</div>'
+        +'<div class="cat-bar-wrap"><div class="cat-bar" style="width:'+Math.round(map[k]/total*100)+'%;background:'+color+'"></div></div>'
+        +'<div class="cat-count">'+map[k]+'</div></div>';
+    }).join('');
+  }
+
+  // alert counts
+  var hoje2=all.filter(function(r){ var d=diffDays(r.prazo); return r.status!=='Encerrado'&&d===0; });
+  var amanha2=all.filter(function(r){ var d=diffDays(r.prazo); return r.status!=='Encerrado'&&d===1; });
+  var dia3=all.filter(function(r){ var d=diffDays(r.prazo); return r.status!=='Encerrado'&&d===2; });
+
+  var alertCards='<div class="alert-cards">'
+    +'<div class="alert-card hoje" onclick="openDrawerByDay(0)" title="Ver tickets com prazo hoje">'
+    +'<div class="ac-icon">🟠</div>'
+    +'<div class="ac-info"><div class="ac-title">Vencem Hoje</div>'
+    +'<div class="ac-count" style="color:var(--orange)">'+hoje2.length+'</div>'
+    +'<div class="ac-sub">ticket'+(hoje2.length!==1?'s':'')+' com prazo no dia de hoje</div></div>'
+    +'<div class="ac-arrow">›</div></div>'
+
+    +'<div class="alert-card amanha" onclick="openDrawerByDay(1)" title="Ver tickets com prazo amanhã">'
+    +'<div class="ac-icon">🟡</div>'
+    +'<div class="ac-info"><div class="ac-title">Vencem Amanhã</div>'
+    +'<div class="ac-count" style="color:var(--amber)">'+amanha2.length+'</div>'
+    +'<div class="ac-sub">ticket'+(amanha2.length!==1?'s':'')+' com prazo amanhã</div></div>'
+    +'<div class="ac-arrow">›</div></div>'
+
+    +'<div class="alert-card terceiro" onclick="openDrawerByDay(2)" title="Ver tickets com prazo em 2 dias">'
+    +'<div class="ac-icon">🔵</div>'
+    +'<div class="ac-info"><div class="ac-title">Vencem em 2 dias</div>'
+    +'<div class="ac-count" style="color:var(--accent)">'+dia3.length+'</div>'
+    +'<div class="ac-sub">ticket'+(dia3.length!==1?'s':'')+' com prazo no 3º dia</div></div>'
+    +'<div class="ac-arrow">›</div></div>'
+    +'</div>';
+
+  return '<div class="stats-row">'
+    +'<div class="stat-card"><div class="sc-val">'+all.length+'</div><div class="sc-label">Total geral</div></div>'
+    +'<div class="stat-card blue"><div class="sc-val">'+ativos.length+'</div><div class="sc-label">Em aberto</div></div>'
+    +'<div class="stat-card red"><div class="sc-val">'+venc.length+'</div><div class="sc-label">Vencidos</div></div>'
+    +'<div class="stat-card amber"><div class="sc-val">'+urg.length+'</div><div class="sc-label">Urgentes (3d)</div></div>'
+    +'<div class="stat-card green"><div class="sc-val">'+enc.length+'</div><div class="sc-label">Encerrados</div></div>'
+    +'</div>'
+    +'<div class="overview-grid">'
+    +'<div class="overview-card"><h4>Por Categoria — Rede Santana (ativos)</h4>'+barRows(cm,ct,'var(--navy)')+'</div>'
+    +'<div class="overview-card"><h4>Por Tipo — Rede Santana (ativos)</h4>'+barRows(tm,tt,'var(--navy2)')+'</div>'
+    +'</div>'
+    +'<div class="dash-section"><h3>Carga por Responsável</h3>'
+    +'<div class="team-cards">'+rcards+'</div>'
+    +alertCards
+    +'</div>';
+}
+
+function openModal(){
+  document.getElementById('overlay').classList.remove('hidden');
+  // Event delegation for footer action buttons
+  document.getElementById('mf').onclick=function(e){
+    var btn=e.target.closest('[data-action]');
+    if(!btn)return;
+    var action=btn.dataset.action;
+    var sec=btn.dataset.sec;
+    var idx=parseInt(btn.dataset.idx);
+    closeModal();
+    if(action==='edit') openEditSec(sec,idx);
+    else if(action==='del') confirmDelSec(sec,idx);
+  };
+}
+function closeModal(){ document.getElementById('overlay').classList.add('hidden'); }
+function closeBg(e){ if(e.target===document.getElementById('overlay'))closeModal(); }
+
+function openDetail(idx, sec){
+  var dataset=sec?S.data[sec]:ds();
+  var r=dataset[idx], d=diffDays(r.prazo);
+  // Store sec+idx for edit/delete to work correctly from drawer
+  var _sec=sec||(S.view.startsWith('rs')?'rs':'es');
+  var hdr='<div>'
+    +'<div style="font-size:10px;font-weight:700;letter-spacing:.6px;color:var(--text-muted);text-transform:uppercase;margin-bottom:6px">'+(r.ticket||'SEM TICKET')+'</div>'
+    +'<h2>'+(r.cliente||'Cliente não informado')+'</h2>'
+    +'<div style="display:flex;gap:7px;margin-top:10px;flex-wrap:wrap">'
+    +'<span class="badge '+tCls(r.tipoDemanda)+'">'+(r.tipoDemanda||'—')+'</span>'
+    +'<span class="badge '+sCls(r.status)+'">'+(r.status||'—')+'</span>'
+    +'<span class="deadline-chip '+uCls(d)+'">'+uLbl(d,r.prazo)+'</span>'
+    +'</div></div>'
+    +'<button class="modal-close" onclick="closeModal()">✕</button>';
+  var bdy='<div class="detail-grid">'
+    +'<div class="detail-item"><label>CNPJ / CPF</label><div class="dv">'+(r.cnpj||'—')+'</div></div>'
+    +'<div class="detail-item"><label>Data de Entrada</label><div class="dv">'+fmtDate(r.dataEntrada)+'</div></div>'
+    +'<div class="detail-item"><label>Categoria</label><div class="dv">'+(r.categoria||'—')+'</div></div>'
+    +'<div class="detail-item"><label>Processo / Protocolo</label><div class="dv" style="word-break:break-all;font-size:12px">'+(r.processo||'—')+'</div></div>'
+    +'<div class="detail-item"><label>Origem</label><div class="dv">'+(r.origem||'—')+'</div></div>'
+    +'<div class="detail-item"><label>E-mail / Canal</label><div class="dv">'+(r.emailEnviado||r.local||'—')+'</div></div>'
+    +(r.tituloEmail?'<div class="detail-item s2"><label>Título do e-mail</label><div class="dv">'+r.tituloEmail+'</div></div>':'')
+    +'<div class="detail-item"><label>Responsável Interno</label><div class="dv" style="font-weight:600">'+(r.respInterno||'—')+'</div></div>'
+    +'<div class="detail-item"><label>Responsável Externo</label><div class="dv" style="font-weight:600">'+(r.respExterno||'—')+'</div></div>'
+    +'<div class="detail-item s2"><label>Descrição</label><div class="detail-desc">'+(r.descricao||'—')+'</div></div>'
+    +(r.obs?'<div class="detail-item s2"><label>Observações</label><div class="detail-desc obs">'+r.obs+'</div></div>':'')
+    +(r.email2?'<div class="detail-item s2"><label>E-mail relacionado 2</label><div class="dv" style="font-size:12px">'+r.email2+'</div></div>':'')
+    +'</div>';
+  var pje=r.processo&&/\d{7}-\d{2}\.\d{4}/.test(r.processo)?'<a href="https://pje.trt3.jus.br/consultaprocessual/" target="_blank" class="btn sm">⚖️ PJe</a>':'';
+  var drv=r.linkDrive?'<a href="'+r.linkDrive+'" target="_blank" class="btn sm">📁 Drive</a>':'';
+  var ftr='<div style="display:flex;gap:8px;flex-wrap:wrap">'+drv+pje+'</div>'
+    +'<div style="display:flex;gap:8px">'
+    +'<button class="btn success sm" data-action="edit" data-sec="'+_sec+'" data-idx="'+idx+'">✏️ Editar</button>'
+    +'<button class="btn danger sm" data-action="del" data-sec="'+_sec+'" data-idx="'+idx+'">🗑 Excluir</button>'
+    +'</div>';
+  document.getElementById('mh').innerHTML=hdr;
+  document.getElementById('mb').innerHTML=bdy;
+  document.getElementById('mf').innerHTML=ftr;
+  openModal();
+}
+
+function buildForm(r){
+  r=r||{};
+  var isRS=S.view.startsWith('rs');
+  var sOpts=['Aberto','Em andamento','Aguardando documento','Aguardando cliente','Encerrado'];
+  var tOpts=isRS?['ANP','Processo Judicial','PROCON','Notificação Extrajudicial','Ministério Público','ANTT','MTE','Locação','Outros']:['Cível','Trabalhista','Contratual','ANP','Outros'];
+  var cOpts=['Cível Administrativo','Cível Judicial','Trabalhista Judicial','Trabalhista Administrativo','Locação','Tributário','Ambiental','Contratos'];
+  var rI=['Samuel','Jéssica','Phillipe','Krislley'];
+  function sel(id,opts,cur){
+    return '<select id="'+id+'">'+opts.map(function(o){ return '<option value="'+o+'"'+(cur===o?' selected':'')+'>'+o+'</option>'; }).join('')+'</select>';
+  }
+  function inp(id,val,ph){ return '<input id="'+id+'" value="'+(val||'')+'"'+(ph?' placeholder="'+ph+'"':'')+'>'; }
+  return '<div class="form-section"><h4>Identificação</h4><div class="form-grid">'
+    +'<div class="form-group"><label>Ticket</label>'+inp('f-ticket',r.ticket,isRS?'RS/26-XXXX':'PP-XXXX')+'</div>'
+    +'<div class="form-group"><label>Data Entrada</label><input type="date" id="f-de" value="'+(r.dataEntrada||'')+'"></div>'
+    +'<div class="form-group s2"><label>Cliente / Posto</label>'+inp('f-cli',r.cliente)+'</div>'
+    +'<div class="form-group"><label>CNPJ / CPF</label>'+inp('f-cnpj',r.cnpj,'00.000.000/0001-00')+'</div>'
+    +(isRS?'<div class="form-group"><label>E-mail do posto</label>'+inp('f-email',r.emailEnviado)+'</div>'
+           :'<div class="form-group"><label>Canal de recebimento</label>'+inp('f-local',r.local,'E-mail, WhatsApp...')+'</div>')
+    +'</div></div>'
+    +'<div class="form-section"><h4>Demanda</h4><div class="form-grid">'
+    +'<div class="form-group"><label>Tipo de Demanda</label>'+sel('f-tipo',tOpts,r.tipoDemanda)+'</div>'
+    +'<div class="form-group"><label>Categoria</label>'+sel('f-cat',cOpts,r.categoria)+'</div>'
+    +'<div class="form-group s2"><label>Nº Processo / Protocolo</label>'+inp('f-proc',r.processo)+'</div>'
+    +(isRS?'<div class="form-group s2"><label>Título do e-mail</label>'+inp('f-temail',r.tituloEmail)+'</div>':'')
+    +'<div class="form-group s2"><label>Origem / Quem reportou</label>'+inp('f-ori',r.origem)+'</div>'
+    +'<div class="form-group s2"><label>Descrição</label><textarea id="f-desc">'+(r.descricao||'')+'</textarea></div>'
+    +'</div></div>'
+    +'<div class="form-section"><h4>Gestão e Prazos</h4><div class="form-grid c3">'
+    +'<div class="form-group"><label>Responsável Interno</label>'+sel('f-ri',rI,r.respInterno)+'</div>'
+    +'<div class="form-group"><label>Responsável Externo</label>'
+    +'<input id="f-re" value="'+(r.respExterno||'')+'" list="dl-re">'
+    +'<datalist id="dl-re"><option value="Lívia (Ambiental)"><option value="Jordânia"><option value="Jéssica"><option value="Willian"><option value="Matheus"><option value="Priscila"><option value="Phillipe"><option value="Ricei"></datalist></div>'
+    +'<div class="form-group"><label>Status</label>'+sel('f-st',sOpts,r.status)+'</div>'
+    +'<div class="form-group"><label>Prazo de Resposta</label><input type="date" id="f-prazo" value="'+(r.prazo||'')+'"></div>'
+    +'<div class="form-group"><label>Data Encerramento</label><input type="date" id="f-enc" value="'+(r.dataEncerramento||'')+'"></div>'
+    +'<div class="form-group"><label>Link Drive</label>'+inp('f-drv',r.linkDrive,'https://drive.google.com/...')+'</div>'
+    +'</div></div>'
+    +'<div class="form-section"><h4>Observações</h4><div class="form-grid c1">'
+    +'<div class="form-group"><label>Observações</label><textarea id="f-obs">'+(r.obs||'')+'</textarea></div>'
+    +'<div class="form-group"><label>E-mail relacionado 2</label>'+inp('f-e2',r.email2)+'</div>'
+    +'<div class="form-group"><label>E-mail relacionado 3</label>'+inp('f-e3',r.email3)+'</div>'
+    +'</div></div>';
+}
+
+function gv(id){ var el=document.getElementById(id); return el?el.value:''; }
+function collectForm(base){
+  base=base||{};
+  var isRS=S.view.startsWith('rs');
+  return Object.assign({},base,{
+    ticket:gv('f-ticket'),dataEntrada:gv('f-de'),cliente:gv('f-cli'),cnpj:gv('f-cnpj'),
+    tipoDemanda:gv('f-tipo'),categoria:gv('f-cat'),processo:gv('f-proc'),
+    tituloEmail:isRS?gv('f-temail'):'',origem:gv('f-ori'),
+    emailEnviado:isRS?gv('f-email'):'',local:isRS?'':gv('f-local'),
+    descricao:gv('f-desc'),respInterno:gv('f-ri'),respExterno:gv('f-re'),
+    status:gv('f-st'),prazo:gv('f-prazo'),dataEncerramento:gv('f-enc'),
+    linkDrive:gv('f-drv'),obs:gv('f-obs'),email2:gv('f-e2'),email3:gv('f-e3'),diasRestantes:''
+  });
+}
+
+function nextTicket(){
+  var isRS=S.view.startsWith('rs');
+  var prefix=isRS?'RS':'PP';
+  var all=S.data[isRS?'rs':'es'];
+  var year=new Date().getFullYear().toString().slice(2);
+  var max=0;
+  all.forEach(function(r){
+    if(!r.ticket)return;
+    var m=r.ticket.match(/(\d{4})$/);
+    if(m) max=Math.max(max,parseInt(m[1],10));
+  });
+  return prefix+'/'+year+'-'+String(max+1).padStart(4,'0');
+}
+
+function openNew(){
+  var sec=S.view.startsWith('rs')?'Rede Santana':'Escritório';
+  var suggested=nextTicket();
+  document.getElementById('mh').innerHTML='<div><h2>Novo Ticket</h2><div style="font-size:12px;color:var(--text-muted);margin-top:4px">'+sec+' · Próximo: <strong style="color:var(--accent)">'+suggested+'</strong></div></div><button class="modal-close" onclick="closeModal()">✕</button>';
+  document.getElementById('mb').innerHTML=buildForm({ticket:suggested});
+  document.getElementById('mf').innerHTML='<button class="btn ghost" onclick="closeModal()">Cancelar</button><button class="btn primary" onclick="saveNew()">💾 Criar Ticket</button>';
+  openModal();
+}
+
+function openEditSec(sec, idx){
+  var prev=S.view;
+  S.view=sec+'-tickets';
+  openEdit(idx);
+  S.view=prev;
+}
+function confirmDelSec(sec, idx){
+  var prev=S.view;
+  S.view=sec+'-tickets';
+  confirmDel(idx);
+  S.view=prev;
+}
+function openEdit(idx){
+  var r=ds()[idx];
+  document.getElementById('mh').innerHTML='<div><div style="font-size:10px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.6px;margin-bottom:6px">Editar Ticket</div><h2>'+(r.ticket||r.cliente)+'</h2></div><button class="modal-close" onclick="closeModal()">✕</button>';
+  document.getElementById('mb').innerHTML=buildForm(r);
+  document.getElementById('mf').innerHTML='<button class="btn ghost" onclick="closeModal()">Cancelar</button><button class="btn primary" onclick="saveEdit('+idx+')">💾 Salvar Alterações</button>';
+  openModal();
+}
+
+function saveNew(){
+  var r=collectForm();
+  if(!r.cliente){ toast('Informe o cliente.','error'); return; }
+  S.data[S.view.startsWith('rs')?'rs':'es'].push(r);
+  closeModal(); render(); toast('Ticket criado!','success');
+}
+
+function saveEdit(idx){
+  ds()[idx]=collectForm(ds()[idx]);
+  closeModal(); render(); toast('Ticket atualizado!','success');
+}
+
+function confirmDel(idx){
+  var r=ds()[idx];
+  if(!confirm('Excluir o ticket '+(r.ticket||r.cliente)+'?')) return;
+  ds().splice(idx,1); render(); toast('Ticket excluído.','error');
+}
+
+function exportCSV(){
+  var rows=filtered();
+  var cols=['ticket','dataEntrada','cliente','cnpj','tipoDemanda','categoria','processo','origem','descricao','respInterno','respExterno','prazo','status','dataEncerramento','linkDrive','obs'];
+  var hdr=['Ticket','Data Entrada','Cliente','CNPJ','Tipo','Categoria','Processo','Origem','Descrição','Resp. Interno','Resp. Externo','Prazo','Status','Encerramento','Drive','Obs'];
+  var csv=[hdr].concat(rows.map(function(r){ return cols.map(function(c){ return '"'+((r[c]||'').replace(/"/g,'""'))+'"'; }); })).map(function(r){ return r.join(','); }).join('\n');
+  var a=document.createElement('a');
+  a.href=URL.createObjectURL(new Blob(['\uFEFF'+csv],{type:'text/csv;charset=utf-8;'}));
+  a.download='tickets-'+(S.view.startsWith('rs')?'rs':'es')+'-'+new Date().toISOString().slice(0,10)+'.csv';
+  a.click();
+}
+
+var _tt;
+function toast(msg,type){
+  var el=document.getElementById('toast');
+  el.textContent=msg; el.className='toast show '+(type||'');
+  clearTimeout(_tt); _tt=setTimeout(function(){ el.className='toast'; },3000);
+}
+
+var _d=new Date();
+var _days=['domingo','segunda-feira','terça-feira','quarta-feira','quinta-feira','sexta-feira','sábado'];
+var _mo=['jan','fev','mar','abr','mai','jun','jul','ago','set','out','nov','dez'];
+document.getElementById('today-str').textContent=_days[_d.getDay()]+', '+_d.getDate()+' '+_mo[_d.getMonth()]+' '+_d.getFullYear();
+go('rs-tickets', document.querySelector('.sidebar-item.active'));
+
+function buildDrawerTicket(r, sec, globalIdx, extraBadge){
+  var d=diffDays(r.prazo);
+  var uc2=uCls(d);
+  var selOpts=STATUS_OPTS.map(function(o){
+    return '<option value="'+o+'"'+(r.status===o?' selected':'')+'>'+o+'</option>';
+  }).join('');
+  var drv=r.linkDrive?'<a href="'+r.linkDrive+'" target="_blank" class="btn sm ghost" style="padding:2px 7px;font-size:11px" onclick="event.stopPropagation()">📁</a>':'';
+  var uid='dtk-'+sec+'-'+globalIdx;
+  var html='<div class="drawer-ticket '+uc2+'" id="'+uid+'" data-sec="'+sec+'" data-idx="'+globalIdx+'">';
+  html+='<div class="dt-top dt-clickable" style="cursor:pointer">';
+  html+='<div><div class="dt-ticket">'+(r.ticket||'SEM TICKET')+'</div>';
+  html+='<div class="dt-cliente">'+(r.cliente||'—')+'</div></div>';
+  html+='<span class="deadline-chip '+uc2+'">'+uLbl(d,r.prazo)+'</span>';
+  html+='</div>';
+  html+='<div class="dt-desc dt-clickable" style="cursor:pointer">'+(r.descricao||'—')+'</div>';
+  html+='<div class="dt-meta">';
+  html+='<span class="badge '+tCls(r.tipoDemanda)+'">'+(r.tipoDemanda||'—')+'</span>';
+  html+=(extraBadge||'');
+  html+=drv;
+  html+='</div>';
+  html+='<div class="dt-status-row">';
+  html+='<select class="dt-status-select" id="sel-'+sec+'-'+globalIdx+'">'+selOpts+'</select>';
+  html+='<button class="dt-save-btn" data-sec="'+sec+'" data-idx="'+globalIdx+'">✓ Salvar status</button>';
+  html+='</div>';
+  html+='</div>';
+  return html;
+}
+
+function saveTblStatus(sec, idx){
+  var sel=document.querySelector('.tbl-status-select[data-sec="'+sec+'"][data-idx="'+idx+'"]');
+  if(!sel)return;
+  var newStatus=sel.value;
+  S.data[sec][idx].status=newStatus;
+  toast('Status atualizado: '+newStatus,'success');
+  render();
+}
+
+function saveDrawerStatus(sec, idx){
+  var sel=document.getElementById('sel-'+sec+'-'+idx);
+  if(!sel)return;
+  var newStatus=sel.value;
+  S.data[sec][idx].status=newStatus;
+  var card=document.getElementById('dtk-'+sec+'-'+idx);
+  if(card){
+    var d=diffDays(S.data[sec][idx].prazo);
+    card.className='drawer-ticket '+uCls(d);
+  }
+  toast('Status atualizado: '+newStatus,'success');
+  if(S.view==='dash') render();
+}
+
+function drawerBodyClick(e){
+  // Save button clicked
+  var btn=e.target.closest('.dt-save-btn');
+  if(btn){
+    var sec=btn.getAttribute('data-sec');
+    var idx=parseInt(btn.getAttribute('data-idx'));
+    saveDrawerStatus(sec, idx);
+    return;
+  }
+  // Anything inside status row: ignore (don't open detail)
+  if(e.target.closest('.dt-status-row')) return;
+  // Title or description clicked: open detail
+  if(e.target.closest('.dt-clickable')){
+    var card=e.target.closest('[data-idx]');
+    if(card){
+      var sec2=card.getAttribute('data-sec');
+      var idx2=parseInt(card.getAttribute('data-idx'));
+      openDetail(idx2, sec2);
+    }
+  }
+}
+
+function openDrawerFromCard(el){
+  var name=el.getAttribute('data-resp');
+  if(name) openDrawer(name);
+}
+
+
+function openDrawer(name){
+  var all=S.data.rs.concat(S.data.es);
+  var tickets=all.filter(function(r){ return r.respInterno===name||r.respExterno===name; });
+  var sorted=tickets.slice().sort(function(a,b){
+    var da=diffDays(a.prazo), db=diffDays(b.prazo);
+    if(da===null&&db===null)return 0;
+    if(da===null)return 1; if(db===null)return -1;
+    return da-db;
+  });
+  var ativos=tickets.filter(function(r){ return r.status!=='Encerrado'; }).length;
+  var venc=tickets.filter(function(r){ var d=diffDays(r.prazo); return r.status!=='Encerrado'&&d!==null&&d<0; }).length;
+  var av=document.getElementById('drawer-avatar');
+  av.textContent=name.slice(0,2).toUpperCase();
+  av.style.background='var(--navy)'; av.style.fontSize='11px';
+  document.getElementById('drawer-name').textContent=name;
+  document.getElementById('drawer-sub').textContent=tickets.length+' ticket'+(tickets.length!==1?'s':'')+' · '+ativos+' em aberto'+(venc>0?' · '+venc+' vencido'+(venc!==1?'s':''):'');
+  var body='';
+  if(sorted.length===0){
+    body='<div class="drawer-empty">Nenhum ticket encontrado.</div>';
+  } else {
+    sorted.forEach(function(r){
+      var sec=S.data.rs.indexOf(r)>=0?'rs':'es';
+      var gi=S.data[sec].indexOf(r);
+      var role=r.respInterno===name&&r.respExterno===name?'Interno e Externo':(r.respInterno===name?'Interno':'Externo');
+      body+=buildDrawerTicket(r,sec,gi,'<span class="badge muted" style="font-size:10px">'+role+'</span>');
+    });
+  }
+  showDrawer(body);
+}
+
+function openDrawerByDay(dayOffset){
+  var labels={0:'Vencem Hoje',1:'Vencem Amanhã',2:'Vencem em 2 dias'};
+  var icons={0:'🟠',1:'🟡',2:'🔵'};
+  var all=S.data.rs.concat(S.data.es);
+  var tickets=all.filter(function(r){
+    var d=diffDays(r.prazo);
+    return r.status!=='Encerrado'&&d===dayOffset;
+  }).sort(function(a,b){ return (a.cliente||'').localeCompare(b.cliente||''); });
+  var av=document.getElementById('drawer-avatar');
+  av.textContent=icons[dayOffset]; av.style.background='transparent'; av.style.fontSize='20px';
+  document.getElementById('drawer-name').textContent=labels[dayOffset];
+  document.getElementById('drawer-sub').textContent=tickets.length+' ticket'+(tickets.length!==1?'s':'')+' com prazo '+(dayOffset===0?'hoje':dayOffset===1?'amanhã':'em 2 dias');
+  var body='';
+  if(tickets.length===0){
+    body='<div class="drawer-empty">✅ Nenhum ticket com prazo neste dia.</div>';
+  } else {
+    tickets.forEach(function(r){
+      var sec=S.data.rs.indexOf(r)>=0?'rs':'es';
+      var gi=S.data[sec].indexOf(r);
+      var resp=r.respInterno||r.respExterno||'—';
+      body+=buildDrawerTicket(r,sec,gi,'<span class="badge muted" style="font-size:10px">👤 '+resp+'</span>');
+    });
+  }
+  showDrawer(body);
+}
+
+function showDrawer(body){
+  var db=document.getElementById('drawer-body');
+  db.innerHTML=body;
+  db.removeEventListener('click', drawerBodyClick);
+  db.addEventListener('click', drawerBodyClick);
+  document.getElementById('drawer-overlay').classList.remove('hidden');
+  document.getElementById('drawer').classList.remove('hidden');
+}
+
+function closeDrawer(){
+  document.getElementById('drawer-overlay').classList.add('hidden');
+  document.getElementById('drawer').classList.add('hidden');
+}
+</script>
+
+<div class="drawer-overlay hidden" id="drawer-overlay" onclick="closeDrawer()"></div>
+<div class="drawer hidden" id="drawer">
+  <div class="drawer-header">
+    <div class="dh-left">
+      <div class="tc-avatar" id="drawer-avatar" style="width:32px;height:32px;font-size:13px"></div>
+      <div>
+        <h3 id="drawer-name"></h3>
+        <div class="dh-sub" id="drawer-sub"></div>
+      </div>
+    </div>
+    <button class="drawer-close" onclick="closeDrawer()">✕</button>
+  </div>
+  <div class="drawer-body" id="drawer-body"></div>
+</div>
+</body>
+</html>
